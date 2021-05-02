@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.3)
 project(LearnOpenGL)
 
 # find packages
+if(POLICY CMP0072)
+    cmake_policy(SET CMP0072 NEW)
+endif()
 find_package(OpenGL REQUIRED)
 
 # include
