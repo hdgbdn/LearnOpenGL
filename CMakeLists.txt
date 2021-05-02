@@ -12,8 +12,8 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glad)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glfw)
 
 # execute
-set(SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src/)
-set(SOURCE_FILES main.cpp)
+set(SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
+set(SOURCE_FILES main.cpp ${SRC_DIR}/Shader.cpp)
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCE_FILES})
 
 
