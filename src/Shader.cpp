@@ -27,7 +27,7 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     }
     this->m_vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     this->m_fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-    this->m_shaderProgramId = glCreateProgram();
+    this->ID = glCreateProgram();
     compile(vertexCode.c_str(), fragmentCode.c_str());
 }
 
@@ -38,19 +38,19 @@ void Shader::compile(const char *vCode, const char *fCode) {
     glShaderSource(this->m_fragmentShaderId, 1, &fCode, nullptr);
     glCompileShader(this->m_fragmentShaderId);
 
-    glAttachShader(this->m_shaderProgramId, this->m_vertexShaderId);
-    glAttachShader(this->m_shaderProgramId, this->m_fragmentShaderId);
-    glLinkProgram(this->m_shaderProgramId);
+    glAttachShader(this->ID, this->m_vertexShaderId);
+    glAttachShader(this->ID, this->m_fragmentShaderId);
+    glLinkProgram(this->ID);
     int success;
     char infoLog[1024];
-    glGetShaderiv(this->m_shaderProgramId, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(this->ID, GL_COMPILE_STATUS, &success);
     if (!success) {
-        glGetShaderInfoLog(this->m_shaderProgramId, 1024, NULL, infoLog);
+        glGetShaderInfoLog(this->ID, 1024, NULL, infoLog);
         std::cout << "ERROR::SHADER_COMPILATION_ERROR " << infoLog << std::endl;
     }
-    glGetProgramiv(this->m_shaderProgramId, GL_LINK_STATUS, &success);
+    glGetProgramiv(this->ID, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetProgramInfoLog(this->m_shaderProgramId, 1024, NULL, infoLog);
+        glGetProgramInfoLog(this->ID, 1024, NULL, infoLog);
         std::cout << "ERROR::PROGRAM_LINKING_ERROR" << infoLog << std::endl;
     }
     glDeleteShader(this->m_vertexShaderId);

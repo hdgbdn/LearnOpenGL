@@ -1,5 +1,7 @@
 #include "Shader.h"
 #include "Camera.h"
+#include "Mesh.h"
+#include "Model.h"
 #include "CommonHeader.h"
 namespace fs = std::filesystem;
 
