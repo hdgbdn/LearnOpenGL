@@ -56,7 +56,7 @@ int main()
 
     fs::path v_path = shader_floder / v_shader_name;
     fs::path f_path = shader_floder / f_shader_name;
-    Shader shader(v_path.c_str(), f_path.c_str());
+    //Shader shader(v_path.c_str(), f_path.c_str());
     Assimp::Importer importer;
 
     while (!glfwWindowShouldClose(window))

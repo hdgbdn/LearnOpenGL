@@ -26,6 +26,10 @@ add_executable(${CMAKE_PROJECT_NAME} ${autopilot_sources})
 # add subdirectory glm GLAD GLFW 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glfw)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glad)
+
+set(ASSIMP_BUILD_TESTS OFF CACHE "" INTERNAL FORCE)
+set(ASSIMP_INSTALL OFF CACHE "" INTERNAL FORCE)
+
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/assimp)
 
 # link libaries
