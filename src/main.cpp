@@ -19,7 +19,7 @@ const fs::path shader_floder(fs::current_path().parent_path()/"shaders");
 const char *v_shader_name = "simple_vertex.vs";
 const char *f_shader_name = "simple_fragment.fs";
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -61,7 +61,7 @@ int main()
     fs::path f_path = shader_floder / f_shader_name;
     Shader shader(v_path.c_str(), f_path.c_str());
 
-    fs::path test_model_path(fs::current_path().parent_path()/"res"/"model"/"trailer"/"Alena_Shek.obj");
+    fs::path test_model_path(fs::current_path().parent_path()/"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.c_str());
 
     while (!glfwWindowShouldClose(window))
@@ -71,8 +71,9 @@ int main()
         lastFrame = currentFrame;
         processInput(window);
 
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.Use();
         // view/projection transformations
@@ -84,7 +85,7 @@ int main()
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));	// it's a bit too big for our scene, so scale it down
         shader.set("model", model);
         //mesh.Draw(shader);
         test_model.Draw(shader);
