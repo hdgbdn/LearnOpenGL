@@ -44,6 +44,7 @@ Mesh::Mesh(vector<Vertex> vertices,  vector<unsigned int> indices, vector<Textur
     this->vertices = vertices;
     this->indices = indices;
     this->textures = textures;
+    setUpMesh();
 }
 
 void Mesh::setUpMesh() {
@@ -51,6 +52,13 @@ void Mesh::setUpMesh() {
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
     glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(1);
@@ -88,7 +96,7 @@ void Mesh::Draw(Shader& shader){
             number = std::to_string(nHeight++); // transfer unsigned int to stream
 
         // now set the sampler to the correct texture unit
-        glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+        shader.set((name + number), (int) i);
         // and finally bind the texture
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }

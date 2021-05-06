@@ -12,6 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <filesystem>
 #include <map>
 #include <vector>
 
@@ -34,6 +35,7 @@ public:
     Model(const char *path) {
         loadModel(path);
     }
+    void Draw(Shader& shader);
 };
 
 void Model::loadModel(string path) {
@@ -47,6 +49,8 @@ void Model::loadModel(string path) {
     directory = path.substr(0, path.find_last_of('/'));
 
     processNode(scene->mRootNode, scene);
+    std::cout << "INFO::MODEL::FINISH" << std::endl;
+    std::cout << directory << ' ' << "MESH::COUNT " << meshes.size() << std::endl;
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene) {
@@ -124,14 +128,14 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
 {
-    string filename = string(path);
-    filename = directory + '/' + filename;
-
+    filesystem::path filePath(directory);
+    filePath /= path;
+    filePath.make_preferred();
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+    unsigned char *data = stbi_load(filePath.c_str(), &width, &height, &nrComponents, 0);
     if (data)
     {
         GLenum format;
@@ -160,4 +164,8 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
     }
 
     return textureID;
+}
+
+void Model::Draw(Shader &shader) {
+    for(auto mesh : this->meshes) mesh.Draw(shader);
 }
