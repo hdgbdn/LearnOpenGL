@@ -19,6 +19,9 @@ const fs::path shader_floder(fs::current_path().parent_path()/"shaders");
 const char *v_shader_name = "simple_vertex.vs";
 const char *f_shader_name = "simple_fragment.fs";
 
+const char *v_outline_name = "outline.vs";
+const char *f_outline_name = "outline.fs";
+
 Camera camera(glm::vec3(0.0f, 3.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -34,13 +37,15 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, NULL);
+    if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -61,9 +66,18 @@ int main()
     fs::path v_path = shader_floder / v_shader_name;
     fs::path f_path = shader_floder / f_shader_name;
     Shader shader(v_path.c_str(), f_path.c_str());
+    fs::path v_ol_path = shader_floder / v_outline_name;
+    fs::path f_ol_path = shader_floder / f_outline_name;
+    Shader outline(v_ol_path.c_str(), f_ol_path.c_str());
 
     fs::path test_model_path(fs::current_path().parent_path()/"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.c_str());
+
+
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -72,24 +86,51 @@ int main()
         lastFrame = currentFrame;
         processInput(window);
 
-        glEnable(GL_DEPTH_TEST);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        shader.Use();
-        // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
+        shader.Use();
         shader.set("projection", projection);
         shader.set("view", view);
 
-        // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
-        shader.set("model", model);
-        //mesh.Draw(shader);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+        glm::mat4 model1 = glm::mat4(1.0f);
+        model1 = glm::translate(model1, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+        model1 = glm::scale(model1, glm::vec3(0.01f, 0.01f, 0.01f));
+
+        glm::mat4 model2 = glm::mat4(1.0f);
+        model2 = glm::translate(model2, glm::vec3(5.0f, 0.0f, 0.0f));
+        model2 = glm::scale(model2, glm::vec3(0.01f, 0.01f, 0.01f));
+
+        shader.set("model", model1);
         test_model.Draw(shader);
+
+        shader.set("model", model2);
+        test_model.Draw(shader);
+
+
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        glStencilFunc(GL_EQUAL, 0, 0xFF);
+        glm::mat4 outline_scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.02f, 1.02f, 1.02f));
+
+        outline.Use();
+        outline.set("projection", projection);
+        outline.set("view", view);
+        outline.set("model", model1);
+        outline.set("scale", outline_scale);
+        test_model.Draw(outline);
+
+        outline.set("model", model2);
+        test_model.Draw(outline);
+
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glEnable(GL_DEPTH_TEST);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

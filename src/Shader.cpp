@@ -62,6 +62,10 @@ void Shader::compile(const char *vCode, const char *fCode) {
     glDeleteShader(this->m_fragmentShaderId);
 }
 
+void Shader::Reload() {
+
+}
+
 void Shader::Use()
 {
     glUseProgram(ID);
