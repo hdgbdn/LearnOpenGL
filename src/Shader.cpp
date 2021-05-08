@@ -71,6 +71,12 @@ void Shader::Use()
     glUseProgram(ID);
 }
 
+void Shader::SetMVP(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection){
+    set("model", model);
+    set("view", view);
+    set("projection", projection);
+}
+
 void Shader::set(const std::string name, bool value) {
     glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
 }

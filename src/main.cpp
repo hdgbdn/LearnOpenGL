@@ -22,7 +22,7 @@ const char *f_shader_name = "simple_fragment.fs";
 const char *v_outline_name = "outline.vs";
 const char *f_outline_name = "outline.fs";
 
-Camera camera(glm::vec3(0.0f, 3.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 6.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -92,8 +92,6 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         shader.Use();
-        shader.set("projection", projection);
-        shader.set("view", view);
 
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
@@ -105,10 +103,10 @@ int main()
         model2 = glm::translate(model2, glm::vec3(5.0f, 0.0f, 0.0f));
         model2 = glm::scale(model2, glm::vec3(0.01f, 0.01f, 0.01f));
 
-        shader.set("model", model1);
+        shader.SetMVP(model1, view, projection);
         test_model.Draw(shader);
 
-        shader.set("model", model2);
+        shader.SetMVP(model2, view, projection);
         test_model.Draw(shader);
 
 
@@ -118,13 +116,11 @@ int main()
         glm::mat4 outline_scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.02f, 1.02f, 1.02f));
 
         outline.Use();
-        outline.set("projection", projection);
-        outline.set("view", view);
-        outline.set("model", model1);
+        outline.SetMVP(model1, view, projection);
         outline.set("scale", outline_scale);
         test_model.Draw(outline);
 
-        outline.set("model", model2);
+        outline.SetMVP(model2, view, projection);
         test_model.Draw(outline);
 
         glStencilMask(0xFF);

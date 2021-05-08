@@ -6,6 +6,7 @@ public:
     Shader(const char* vertexPath, const char* fragmentPath);
     void Reload();
     void Use();
+    void SetMVP(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection);
     void set(const std::string name, bool value);
     void set(const std::string name, int value);
     void set(const std::string name, float value);
