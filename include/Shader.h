@@ -3,7 +3,7 @@
 class Shader{
 public:
     unsigned int ID;
-    Shader(const char* vertexPath, const char* fragmentPath);
+    Shader(const std::string& vertexPath, const std::string&  fragmentPath);
     void Reload();
     void Use();
     void SetMVP(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection);

@@ -16,11 +16,11 @@ const unsigned int SCR_HEIGHT = 600;
 
 const fs::path shader_floder(fs::current_path().parent_path()/"shaders");
 
-const char *v_shader_name = "simple_vertex.vs";
-const char *f_shader_name = "simple_fragment.fs";
+const std::string v_shader_name = "simple_vertex.vs";
+const std::string f_shader_name = "simple_fragment.fs";
 
-const char *v_outline_name = "outline.vs";
-const char *f_outline_name = "outline.fs";
+const std::string v_outline_name = "outline.vs";
+const std::string f_outline_name = "outline.fs";
 
 Camera camera(glm::vec3(0.0f, 3.0f, 6.0f));
 float lastX = SCR_WIDTH / 2.0f;
@@ -90,12 +90,11 @@ int main()
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        outline.Use();
+        shader.Use();
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        outline.SetMVP(model, view, projection);
-        outline.set("scale", glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
+        shader.SetMVP(model, view, projection);
         cube.Draw(outline);
 
         glfwSwapBuffers(window);

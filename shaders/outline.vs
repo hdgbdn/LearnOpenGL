@@ -13,6 +13,5 @@ uniform mat4 scale;
 void main()
 {
     TexCoords = aTexCoords;
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = projection * view * model * scale * vec4(aPos, 1.0);
 }
-
