@@ -4,31 +4,36 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
     m_fragmentPath = fragmentPath;
     std::string vertexCode;
     std::string fragmentCode;
+    load(vertexCode, fragmentCode);
+    this->m_vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+    this->m_fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+    this->ID = glCreateProgram();
+    compile(vertexCode.c_str(), fragmentCode.c_str());
+}
+
+void Shader::load(std::string& vertex, std::string& fragement)
+{
     std::ifstream shaderFile;
-    shaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try
     {
         // open files
-        shaderFile.open(vertexPath);
+        shaderFile.open(m_vertexPath);
         std::stringstream stream;
         stream << shaderFile.rdbuf();
         shaderFile.close();
-        vertexCode = stream.str();
+        vertex = stream.str();
         stream.str(std::string());
 
-        shaderFile.open(fragmentPath);
+        shaderFile.open(m_fragmentPath);
         stream << shaderFile.rdbuf();
         shaderFile.close();
-        fragmentCode = stream.str();
+        fragement = stream.str();
     }
     catch (std::ifstream::failure& e)
     {
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
     }
-    this->m_vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-    this->m_fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-    this->ID = glCreateProgram();
-    compile(vertexCode.c_str(), fragmentCode.c_str());
 }
 
 void Shader::compile(const char *vCode, const char *fCode) {
@@ -63,7 +68,11 @@ void Shader::compile(const char *vCode, const char *fCode) {
 }
 
 void Shader::Reload() {
-
+    std::string vertexCode;
+    std::string fragmentCode;
+    load(vertexCode, fragmentCode);
+    compile(vertexCode.c_str(), fragmentCode.c_str());
+    std::cout << "INFO::SHADER::RELOADED" << std::endl;
 }
 
 void Shader::Use()

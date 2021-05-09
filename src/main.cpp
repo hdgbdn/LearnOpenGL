@@ -14,7 +14,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-const fs::path shader_floder(fs::current_path().parent_path()/"shaders");
+const fs::path shader_floder(fs::current_path().parent_path().parent_path() /"shaders");
 
 const std::string v_shader_name = "simple_vertex.vs";
 const std::string f_shader_name = "simple_fragment.fs";
@@ -27,6 +27,7 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 bool viewMode = false;
+bool needReloadShader = false;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -64,15 +65,17 @@ int main()
         return -1;
     }
 
+    vector<Shader> shaders;
     fs::path v_path = shader_floder / v_shader_name;
     fs::path f_path = shader_floder / f_shader_name;
-    Shader shader(v_path.c_str(), f_path.c_str());
+    Shader shader(v_path.string(), f_path.string());
+    shaders.push_back(shader);
     fs::path v_ol_path = shader_floder / v_outline_name;
     fs::path f_ol_path = shader_floder / f_outline_name;
-    Shader outline(v_ol_path.c_str(), f_ol_path.c_str());
-
+    Shader outline(v_ol_path.string(), f_ol_path.string());
+    shaders.push_back(shader);
     fs::path test_model_path(fs::current_path().parent_path()/"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
-    Model test_model(test_model_path.c_str());
+    Model test_model(test_model_path.string().c_str());
 
     SetDefaultMesh();
 
@@ -88,6 +91,12 @@ int main()
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    	if(needReloadShader)
+    	{
+            for (auto s : shaders) s.Reload();
+            needReloadShader = false;
+    	}
+
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         shader.Use();
@@ -95,7 +104,7 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         shader.SetMVP(model, view, projection);
-        cube.Draw(outline);
+        cube.Draw(shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -109,7 +118,8 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+        needReloadShader = true;
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
         viewMode = true;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);

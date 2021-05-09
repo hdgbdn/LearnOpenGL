@@ -29,6 +29,6 @@ private:
     std::string m_fragmentPath;
     unsigned int m_vertexShaderId;
     unsigned int m_fragmentShaderId;
-    void load();
+    void load(std::string& vertex, std::string& fragement);
     void compile(const char* vCode, const char* fCode);
 };
