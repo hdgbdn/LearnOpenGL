@@ -101,11 +101,18 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         shader.Use();
 
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    	
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         shader.SetMVP(model, view, projection);
-        cube.Draw(shader);
+        plane.Draw(shader);
 
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
+        shader.SetMVP(model, view, projection);
+        cube.Draw(shader);
+    	
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

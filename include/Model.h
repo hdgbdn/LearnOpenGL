@@ -215,10 +215,21 @@ float cubeVertices[] = {
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 };
+
+float planeVertices[] = {
+    // positions          // normals           // texture coords
+    -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+    0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+    0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    -0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+    -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f
+};
 Mesh cube;
+Mesh plane;
 
 
-void SetMesh(float* verticesArray, unsigned int vertCount,Mesh& dest){
+void SetMesh(float* verticesArray, unsigned int vertCount,Mesh& dest, const char* name){
     vector<Vertex> verties;
     vector<unsigned int> indicies;
     vector<Texture> textures;
@@ -238,7 +249,7 @@ void SetMesh(float* verticesArray, unsigned int vertCount,Mesh& dest){
     }
     Texture texture;
     std::string path = (filesystem::current_path().parent_path().parent_path()/"res"/"textures").string();
-    texture.id = TextureFromFile("grass.png", path.c_str());
+    texture.id = TextureFromFile(name, path.c_str());
     texture.type = "texture_diffuse";
     texture.path = path.c_str();
     textures.push_back(texture);
@@ -247,5 +258,6 @@ void SetMesh(float* verticesArray, unsigned int vertCount,Mesh& dest){
 
 // default objects
 void SetDefaultMesh(){
-    SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8,cube);
+    SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8,cube, "grass.png");
+    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, plane, "blending_transparent_window.png");
 }
