@@ -150,8 +150,8 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -258,6 +258,16 @@ void SetMesh(float* verticesArray, unsigned int vertCount,Mesh& dest, const char
 
 // default objects
 void SetDefaultMesh(){
-    SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8,cube, "grass.png");
-    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, plane, "blending_transparent_window.png");
+    SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8,cube, "blending_transparent_window.png");
+    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, plane, "grass.png");
+}
+
+void ChangeTexture(Mesh& mesh, unsigned int id, string type = "texture_diffuse", string path = "default.png")
+{
+    Texture texture;
+    texture.id = id;
+    texture.type = type;
+    texture.path = path.c_str();
+    mesh.textures.clear();
+    mesh.textures.push_back(texture);
 }

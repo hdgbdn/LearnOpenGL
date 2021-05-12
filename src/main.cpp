@@ -22,7 +22,7 @@ const std::string f_shader_name = "simple_fragment.fs";
 const std::string v_outline_name = "outline.vs";
 const std::string f_outline_name = "outline.fs";
 
-Camera camera(glm::vec3(0.0f, 3.0f, 6.0f));
+Camera camera(glm::vec3(1.0f, 0.0f, 6.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -33,6 +33,30 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
 extern Mesh cube;
+
+void DrawCube(Shader& shader)
+{
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    shader.Use();
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    shader.SetMVP(model, view, projection);
+    cube.Draw(shader);
+}
+
+void DrawPlane(Shader& shader)
+{
+
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    shader.Use();
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
+    shader.SetMVP(model, view, projection);
+    plane.Draw(shader);
+}
 
 int main()
 {
@@ -73,11 +97,40 @@ int main()
     fs::path v_ol_path = shader_floder / v_outline_name;
     fs::path f_ol_path = shader_floder / f_outline_name;
     Shader outline(v_ol_path.string(), f_ol_path.string());
-    shaders.push_back(shader);
+    shaders.push_back(outline);
+    Shader screenShader((shader_floder / "frame_buffer.vs").string(), (shader_floder / "frame_buffer.fs").string());
+    shaders.push_back(screenShader);
     fs::path test_model_path(fs::current_path().parent_path()/"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
     SetDefaultMesh();
+
+    // frame buffer
+    unsigned int fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    unsigned int texColorBuffer;
+    glGenTextures(1, &texColorBuffer);
+    glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+	
+    // render buffer
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAMEBUFFER::Framebuffer is not complete" << std::endl;
+    glBindBuffer(GL_FRAMEBUFFER, 0);
 
 
     while (!glfwWindowShouldClose(window))
@@ -87,33 +140,32 @@ int main()
         lastFrame = currentFrame;
         processInput(window);
 
+    	// frame buffer pass
+    	// render to frame buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        shader.Use();
+        DrawCube(shader);
+
+    	// render to back buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        //screenShader.Use();
+        glDisable(GL_DEPTH_TEST);
+        glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+        ChangeTexture(plane, texColorBuffer);
+        DrawPlane(shader);
 
     	if(needReloadShader)
     	{
             for (auto s : shaders) s.Reload();
             needReloadShader = false;
     	}
-
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        shader.Use();
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        shader.SetMVP(model, view, projection);
-        cube.Draw(shader);
-
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
-        shader.SetMVP(model, view, projection);
-        plane.Draw(shader);
-    	
+    
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
