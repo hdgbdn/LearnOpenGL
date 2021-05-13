@@ -10,9 +10,19 @@ void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
+unsigned int loadCubemap(vector<string> faces);
+vector<std::string> faces
+{
+    "right.jpg",
+        "left.jpg",
+        "top.jpg",
+        "bottom.jpg",
+        "front.jpg",
+        "back.jpg"
+};
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1024;
+const unsigned int SCR_HEIGHT = 1024;
 
 const fs::path shader_floder(fs::current_path().parent_path().parent_path() /"shaders");
 
@@ -31,8 +41,6 @@ bool needReloadShader = false;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
-
-extern Mesh cube;
 
 void DrawCube(Shader& shader)
 {
@@ -57,6 +65,17 @@ void DrawPlane(Shader& shader)
     shader.SetMVP(model, view, projection);
     plane.Draw(shader);
 }
+
+void DrawSkyBox(Shader& shader)
+{
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+    shader.set("projection", projection);
+    shader.set("view", view);
+    shader.set("skybox", 0);
+    skybox.Draw(shader);
+}
+
 
 int main()
 {
@@ -100,38 +119,17 @@ int main()
     shaders.push_back(outline);
     Shader screenShader((shader_floder / "frame_buffer.vs").string(), (shader_floder / "frame_buffer.fs").string());
     shaders.push_back(screenShader);
-    fs::path test_model_path(fs::current_path().parent_path()/"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
+    Shader skybox((shader_floder / "skybox.vs").string(), (shader_floder / "skybox.fs").string());
+	shaders.push_back(skybox);
+	Shader reflection((shader_floder / "reflection.vs").string(), (shader_floder / "reflection.fs").string());
+    shaders.push_back(reflection);
+    fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
     SetDefaultMesh();
 
-    // frame buffer
-    unsigned int fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    unsigned int texColorBuffer;
-    glGenTextures(1, &texColorBuffer);
-    glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
-	
-    // render buffer
-    unsigned int rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER::Framebuffer is not complete" << std::endl;
-    glBindBuffer(GL_FRAMEBUFFER, 0);
-
+	// create skybox
+    unsigned int cubemapTexture = loadCubemap(faces);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -139,33 +137,38 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         processInput(window);
-
-    	// frame buffer pass
-    	// render to frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glEnable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shader.Use();
-        DrawCube(shader);
-
-    	// render to back buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        //screenShader.Use();
-        glDisable(GL_DEPTH_TEST);
-        glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-        ChangeTexture(plane, texColorBuffer);
-        DrawPlane(shader);
-
-    	if(needReloadShader)
-    	{
+    	
+        if (needReloadShader)
+        {
             for (auto s : shaders) s.Reload();
             needReloadShader = false;
-    	}
-    
+        }
+
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    	
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+        reflection.Use();
+        reflection.SetMVP(model, view, projection);
+        reflection.set("cameraPos", camera.Position);
+        test_model.Draw(reflection);
+    	
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LEQUAL);
+        skybox.Use();
+        DrawSkyBox(skybox);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+    	
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -229,4 +232,34 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
+}
+
+unsigned int loadCubemap(vector<string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    int width, height, nrChannels;
+	for(unsigned int i = 0; i < faces.size(); i++)
+	{
+        fs::path skyboxPath = fs::current_path().parent_path().parent_path()/"res"/"textures"/"skybox2";
+        unsigned char* data = stbi_load((skyboxPath/faces[i]).string().c_str(), &width, &height, &nrChannels, 0);
+		if(data)
+		{
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+		}
+        else{
+            std::cout << "ERROR::STBI::LOAD_IMAGE_FAILED" << std::endl;
+            stbi_image_free(data);
+		}
+	}
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
 }

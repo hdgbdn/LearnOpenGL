@@ -129,6 +129,7 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
 {
     filesystem::path filePath(directory);
+    filePath = filePath.parent_path();
     filePath /= path;
     filePath.make_preferred();
     unsigned int textureID;
@@ -225,29 +226,76 @@ float planeVertices[] = {
     -0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
     0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
 };
+
+float skyboxVertices[] = {
+    // positions          
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f
+};
+
 Mesh cube;
 Mesh plane;
+Mesh skybox;
 
-
-void SetMesh(float* verticesArray, unsigned int vertCount,Mesh& dest, const char* name){
-    vector<Vertex> verties;
-    vector<unsigned int> indicies;
-    vector<Texture> textures;
-    for(int i = 0; i < vertCount; i++){
-        Vertex vert;
-        for(int j = 0; j < 3; j++){
-            vert.Position[j] = verticesArray[i*8+j];
-        }
-        for(int j = 3; j < 6; j++){
-            vert.Normal[j-3] = verticesArray[i*8+j];
-        }
-        for(int j = 6; j < 8; j++){
-            vert.UV[j-6] = verticesArray[i*8+j];
-        }
-        verties.push_back(vert);
-        indicies.push_back(i);
-    }
-    Texture texture;
+void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, unsigned int nNorm, unsigned int nUV, Mesh& dest, const char* name) {
+	vector<Vertex> verties;
+	vector<unsigned int> indicies;
+	vector<Texture> textures;
+    int len = nPos + nNorm + nUV;
+	for (int i = 0; i < vertCount; i++) {
+		Vertex vert;
+		for (int j = 0; j < nPos; j++) {
+			vert.Position[j] = verticesArray[i * len + j];
+		}
+		for (int j = nPos; j < nPos + nNorm; j++) {
+			vert.Normal[j - 3] = verticesArray[i * len + j];
+		}
+		for (int j = nPos + nNorm; j < nPos + nNorm + nUV; j++) {
+			vert.UV[j - 6] = verticesArray[i * len + j];
+		}
+		verties.push_back(vert);
+		indicies.push_back(i);
+	}
+	Texture texture;
     std::string path = (filesystem::current_path().parent_path().parent_path()/"res"/"textures").string();
     texture.id = TextureFromFile(name, path.c_str());
     texture.type = "texture_diffuse";
@@ -258,8 +306,9 @@ void SetMesh(float* verticesArray, unsigned int vertCount,Mesh& dest, const char
 
 // default objects
 void SetDefaultMesh(){
-    SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8,cube, "blending_transparent_window.png");
-    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, plane, "grass.png");
+    SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8, 3, 3, 2,cube, "wall.jpg");
+    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "grass.png");
+    SetMesh(skyboxVertices, sizeof(skyboxVertices)/sizeof(skyboxVertices[0])/3, 3, 0, 0, skybox, "grass.png");
 }
 
 void ChangeTexture(Mesh& mesh, unsigned int id, string type = "texture_diffuse", string path = "default.png")
