@@ -130,7 +130,78 @@ int main()
 
 	// create skybox
     unsigned int cubemapTexture = loadCubemap(faces);
+    
+    float planeVertices[] = {
+        // positions          // normals           // texture coords
+            0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+        0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+        -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+        0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    };
 
+    float position[] = {
+        0.5f,  0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f,  0.5f, 0.0f,
+        0.5f,  0.5f, 0.0f,
+    };
+
+    float normal[]
+    {
+		0.0f,  0.0f, -1.0f,
+        0.0f,  0.0f, -1.0f,
+        0.0f,  0.0f, -1.0f,
+        0.0f,  0.0f, -1.0f,
+        0.0f,  0.0f, -1.0f,
+        0.0f,  0.0f, -1.0f,
+    };
+
+	float UV[] = {
+		1.0f,  1.0f,
+		1.0f,  0.0f,
+		0.0f,  0.0f,
+		0.0f,  0.0f,
+		0.0f,  1.0f,
+		1.0f,  1.0f,
+	};
+	
+
+    unsigned int batchVAO, batchVBO;
+    glGenVertexArrays(1, &batchVAO);
+    glGenBuffers(1, &batchVBO);
+    glBindVertexArray(batchVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(position), &position);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(position), sizeof(normal), &normal);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(position) + sizeof(normal), sizeof(UV), &UV);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)sizeof(position));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (void*)(sizeof(position) + sizeof(normal)));
+    glBindVertexArray(0);
+
+    unsigned int normalVAO, normalVBO;
+    glGenVertexArrays(1, &normalVAO);
+    glGenBuffers(1, &normalVBO);
+    glBindVertexArray(normalVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, normalVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glBindVertexArray(0);
+
+
+	
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -162,7 +233,9 @@ int main()
         reflection.set("cameraPos", camera.Position);
         //test_model.Draw(reflection);
         DrawCube(reflection);
-    	
+
+        glBindVertexArray(batchVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
@@ -170,6 +243,10 @@ int main()
         DrawSkyBox(skybox);
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
+    	
+        void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        // make sure to tell OpenGL we're done with the pointer
+        glUnmapBuffer(GL_ARRAY_BUFFER);
     	
         glfwSwapBuffers(window);
         glfwPollEvents();
