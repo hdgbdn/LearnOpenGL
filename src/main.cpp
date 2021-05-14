@@ -21,8 +21,8 @@ vector<std::string> faces
         "back.jpg"
 };
 // settings
-const unsigned int SCR_WIDTH = 1024;
-const unsigned int SCR_HEIGHT = 1024;
+unsigned int SCR_WIDTH = 1024;
+unsigned int SCR_HEIGHT = 1024;
 
 const fs::path shader_floder(fs::current_path().parent_path().parent_path() /"shaders");
 
@@ -160,7 +160,9 @@ int main()
         reflection.Use();
         reflection.SetMVP(model, view, projection);
         reflection.set("cameraPos", camera.Position);
-        test_model.Draw(reflection);
+        //test_model.Draw(reflection);
+        DrawCube(reflection);
+    	
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
@@ -208,6 +210,8 @@ void processInput(GLFWwindow *window)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
