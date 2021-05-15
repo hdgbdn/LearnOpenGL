@@ -73,7 +73,7 @@ void DrawSkyBox(Shader& shader)
     shader.set("projection", projection);
     shader.set("view", view);
     shader.set("skybox", 0);
-    skybox.Draw(shader);
+    meshSkybox.Draw(shader);
 }
 
 
@@ -130,77 +130,20 @@ int main()
 
 	// create skybox
     unsigned int cubemapTexture = loadCubemap(faces);
-    
-    float planeVertices[] = {
-        // positions          // normals           // texture coords
-            0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-        0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-        -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-        0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-    };
 
-    float position[] = {
-        0.5f,  0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f,
-        0.5f,  0.5f, 0.0f,
-    };
+	// using uniform buffers
+    unsigned int ubo;
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
 
-    float normal[]
-    {
-		0.0f,  0.0f, -1.0f,
-        0.0f,  0.0f, -1.0f,
-        0.0f,  0.0f, -1.0f,
-        0.0f,  0.0f, -1.0f,
-        0.0f,  0.0f, -1.0f,
-        0.0f,  0.0f, -1.0f,
-    };
+    unsigned int uniformBlockSimple = glGetUniformBlockIndex(shader.ID, "Matrices");
+    unsigned int uniformBlockSkybox = glGetUniformBlockIndex(skybox.ID, "Matrices");
 
-	float UV[] = {
-		1.0f,  1.0f,
-		1.0f,  0.0f,
-		0.0f,  0.0f,
-		0.0f,  0.0f,
-		0.0f,  1.0f,
-		1.0f,  1.0f,
-	};
-	
-
-    unsigned int batchVAO, batchVBO;
-    glGenVertexArrays(1, &batchVAO);
-    glGenBuffers(1, &batchVBO);
-    glBindVertexArray(batchVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(position), &position);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(position), sizeof(normal), &normal);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(position) + sizeof(normal), sizeof(UV), &UV);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)sizeof(position));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (void*)(sizeof(position) + sizeof(normal)));
-    glBindVertexArray(0);
-
-    unsigned int normalVAO, normalVBO;
-    glGenVertexArrays(1, &normalVAO);
-    glGenBuffers(1, &normalVBO);
-    glBindVertexArray(normalVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, normalVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glBindVertexArray(0);
-
-
+    glUniformBlockBinding(shader.ID, uniformBlockSimple, 0);
+    glUniformBlockBinding(skybox.ID, uniformBlockSkybox, 0);
 	
     while (!glfwWindowShouldClose(window))
     {
@@ -225,22 +168,20 @@ int main()
     	
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    	shader.Use();
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
-        reflection.Use();
-        reflection.SetMVP(model, view, projection);
-        reflection.set("cameraPos", camera.Position);
-        //test_model.Draw(reflection);
-        DrawCube(reflection);
-
-        glBindVertexArray(batchVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        shader.set("model", model);
+        cube.Draw(shader);
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
         skybox.Use();
-        DrawSkyBox(skybox);
+        skybox.set("skybox", 0);
+        meshSkybox.Draw(skybox);
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
     	

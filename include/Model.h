@@ -274,7 +274,7 @@ float skyboxVertices[] = {
 
 Mesh cube;
 Mesh plane;
-Mesh skybox;
+Mesh meshSkybox;
 
 void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, unsigned int nNorm, unsigned int nUV, Mesh& dest, const char* name) {
 	vector<Vertex> verties;
@@ -308,7 +308,7 @@ void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, uns
 void SetDefaultMesh(){
     SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8, 3, 3, 2,cube, "wall.jpg");
     SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "grass.png");
-    SetMesh(skyboxVertices, sizeof(skyboxVertices)/sizeof(skyboxVertices[0])/3, 3, 0, 0, skybox, "grass.png");
+    SetMesh(skyboxVertices, sizeof(skyboxVertices)/sizeof(skyboxVertices[0])/3, 3, 0, 0, meshSkybox, "grass.png");
 }
 
 void ChangeTexture(Mesh& mesh, unsigned int id, string type = "texture_diffuse", string path = "default.png")
