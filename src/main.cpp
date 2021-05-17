@@ -123,11 +123,31 @@ int main()
 	shaders.push_back(skybox);
 	Shader reflection((shader_floder / "reflection.vs").string(), (shader_floder / "reflection.fs").string());
     shaders.push_back(reflection);
-    fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
+    Shader geo((shader_floder / "geo.vs").string(), (shader_floder / "geo.fs").string(), (shader_floder / "geo.gs").string());
+    shaders.push_back(geo);
+	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
     SetDefaultMesh();
 
+	// geo shader object
+    float points[] = {
+    -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+     0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+    -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+    };
+    unsigned VAO, VBO;
+    glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), &points, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2*sizeof(float)));
+    glBindVertexArray(0);
 	// create skybox
     unsigned int cubemapTexture = loadCubemap(faces);
 
@@ -172,10 +192,11 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    	shader.Use();
-        glm::mat4 model = glm::mat4(1.0f);
-        shader.set("model", model);
-        cube.Draw(shader);
+
+        geo.Use();
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_POINTS, 0, 4);
+        glBindVertexArray(0);
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
