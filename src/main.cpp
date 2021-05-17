@@ -123,7 +123,7 @@ int main()
 	shaders.push_back(skybox);
 	Shader reflection((shader_floder / "reflection.vs").string(), (shader_floder / "reflection.fs").string());
     shaders.push_back(reflection);
-    Shader geo((shader_floder / "geo.vs").string(), (shader_floder / "geo.fs").string(), (shader_floder / "geo.gs").string());
+    Shader geo((shader_floder / "explode.vs").string(), (shader_floder / "explode.fs").string(), (shader_floder / "explode.gs").string());
     shaders.push_back(geo);
 	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
@@ -194,9 +194,8 @@ int main()
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         geo.Use();
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_POINTS, 0, 4);
-        glBindVertexArray(0);
+        geo.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
+        test_model.Draw(geo);
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
