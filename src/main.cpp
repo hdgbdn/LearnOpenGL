@@ -194,6 +194,7 @@ int main()
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         geo.Use();
+        geo.set("time", (float)glfwGetTime());
         geo.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
         test_model.Draw(geo);
     	

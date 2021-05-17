@@ -13,11 +13,13 @@ uniform mat4 model;
 
 out VS_OUT{
     vec2 TexCoords;
+    vec3 Normal;
 } vs_out;
 
 void main()
 {
     vs_out.TexCoords = aTexCoords;
+    vs_out.Normal = normalize(mat3(transpose(inverse(model))) * aNormal);
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }
 
