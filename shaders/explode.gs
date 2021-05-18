@@ -5,6 +5,7 @@ layout (triangle_strip, max_vertices = 3) out;
 in VS_OUT{
     vec2 TexCoords;
     vec3 Normal;
+    mat4 Projection;
 } gs_in[];
 
 out GS_OUT
@@ -22,13 +23,13 @@ vec4 explode(vec4 position, vec3 normal)
 } 
 
 void main() {
-    gl_Position = explode(gl_in[0].gl_Position, gs_in[0].Normal);
+    gl_Position = explode(gl_in[0].gl_Position, mat3(gs_in[0].Projection) * gs_in[0].Normal);
     gs_out.TexCoords = gs_in[0].TexCoords;
     EmitVertex();
-    gl_Position = explode(gl_in[1].gl_Position, gs_in[1].Normal);
+    gl_Position = explode(gl_in[1].gl_Position, mat3(gs_in[1].Projection) * gs_in[1].Normal);
     gs_out.TexCoords = gs_in[1].TexCoords;
     EmitVertex();
-    gl_Position = explode(gl_in[2].gl_Position, gs_in[2].Normal);
+    gl_Position = explode(gl_in[2].gl_Position, mat3(gs_in[2].Projection) * gs_in[2].Normal);
     gs_out.TexCoords = gs_in[2].TexCoords;
     EmitVertex();
     EndPrimitive();
