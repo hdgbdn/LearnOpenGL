@@ -15,6 +15,7 @@ out VS_OUT{
     vec2 TexCoords;
     vec4 ViewNormal;
     vec4 ViewPos;
+    vec4 ModelMovedPos;
 } vs_out;
 
 void main()
@@ -22,6 +23,7 @@ void main()
     vs_out.TexCoords = aTexCoords;
     vs_out.ViewNormal = transpose(inverse(view * model)) * vec4(aNormal, 0.0);
     vs_out.ViewPos = view * model * vec4(aPos, 1.0);
+    vs_out.ModelMovedPos = vec4(aPos, 1.0) + vec4(aNormal * 30, 0.0);
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }
 

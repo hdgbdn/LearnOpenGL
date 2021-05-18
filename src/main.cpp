@@ -21,8 +21,8 @@ vector<std::string> faces
         "back.jpg"
 };
 // settings
-unsigned int SCR_WIDTH = 1024;
-unsigned int SCR_HEIGHT = 1024;
+unsigned int SCR_WIDTH = 2560;
+unsigned int SCR_HEIGHT = 1440;
 
 const fs::path shader_floder(fs::current_path().parent_path().parent_path() /"shaders");
 
@@ -193,13 +193,13 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        shader.Use();
-        shader.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
-        test_model.Draw(shader);
         geo.Use();
         //geo.set("time", (float)glfwGetTime());
         geo.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
         test_model.Draw(geo);
+        shader.Use();
+        shader.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
+        test_model.Draw(shader);
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
