@@ -13,15 +13,15 @@ uniform mat4 model;
 
 out VS_OUT{
     vec2 TexCoords;
-    vec3 Normal;
-    mat4 Projection;
+    vec4 ViewNormal;
+    vec4 ViewPos;
 } vs_out;
 
 void main()
 {
     vs_out.TexCoords = aTexCoords;
-    vs_out.Normal = normalize(mat3(transpose(inverse(view *model))) * aNormal);
-    vs_out.Projection = projection;
+    vs_out.ViewNormal = transpose(inverse(view * model)) * vec4(aNormal, 0.0);
+    vs_out.ViewPos = view * model * vec4(aPos, 1.0);
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }
 

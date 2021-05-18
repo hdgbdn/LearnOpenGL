@@ -2,10 +2,15 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
+
 in VS_OUT{
     vec2 TexCoords;
     vec3 Normal;
-    mat4 Projection;
 } gs_in[];
 
 out GS_OUT
@@ -14,6 +19,7 @@ out GS_OUT
 } gs_out;
 
 uniform float time;
+uniform mat4 model;
 
 vec4 explode(vec4 position, vec3 normal)
 {
@@ -23,13 +29,13 @@ vec4 explode(vec4 position, vec3 normal)
 } 
 
 void main() {
-    gl_Position = explode(gl_in[0].gl_Position, mat3(gs_in[0].Projection) * gs_in[0].Normal);
+    gl_Position = explode(gl_in[0].gl_Position, mat3(projection) * gs_in[0].Normal);
     gs_out.TexCoords = gs_in[0].TexCoords;
     EmitVertex();
-    gl_Position = explode(gl_in[1].gl_Position, mat3(gs_in[1].Projection) * gs_in[1].Normal);
+    gl_Position = explode(gl_in[1].gl_Position, mat3(projection) * gs_in[1].Normal);
     gs_out.TexCoords = gs_in[1].TexCoords;
     EmitVertex();
-    gl_Position = explode(gl_in[2].gl_Position, mat3(gs_in[2].Projection) * gs_in[2].Normal);
+    gl_Position = explode(gl_in[2].gl_Position, mat3(projection) * gs_in[2].Normal);
     gs_out.TexCoords = gs_in[2].TexCoords;
     EmitVertex();
     EndPrimitive();

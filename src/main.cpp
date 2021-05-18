@@ -123,7 +123,7 @@ int main()
 	shaders.push_back(skybox);
 	Shader reflection((shader_floder / "reflection.vs").string(), (shader_floder / "reflection.fs").string());
     shaders.push_back(reflection);
-    Shader geo((shader_floder / "explode.vs").string(), (shader_floder / "explode.fs").string(), (shader_floder / "explode.gs").string());
+    Shader geo((shader_floder / "explode.vs").string(), (shader_floder / "explode.fs").string(), (shader_floder / "drawNormal.gs").string());
     shaders.push_back(geo);
 	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
@@ -197,7 +197,7 @@ int main()
         shader.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
         test_model.Draw(shader);
         geo.Use();
-        geo.set("time", (float)glfwGetTime());
+        //geo.set("time", (float)glfwGetTime());
         geo.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
         test_model.Draw(geo);
     	
