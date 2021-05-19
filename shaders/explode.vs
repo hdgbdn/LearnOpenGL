@@ -16,6 +16,7 @@ out VS_OUT{
     vec4 ViewNormal;
     vec4 ViewPos;
     vec4 ModelMovedPos;
+    vec4 WorldMovedPos;
 } vs_out;
 
 void main()
@@ -24,6 +25,7 @@ void main()
     vs_out.ViewNormal = transpose(inverse(view * model)) * vec4(aNormal, 0.0);
     vs_out.ViewPos = view * model * vec4(aPos, 1.0);
     vs_out.ModelMovedPos = vec4(aPos, 1.0) + vec4(aNormal * 30, 0.0);
+    vs_out.WorldMovedPos = model * vec4(aPos, 1.0) + model * vec4(aNormal * 30, 0.0);
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }
 

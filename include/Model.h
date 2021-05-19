@@ -36,6 +36,7 @@ public:
         loadModel(path);
     }
     void Draw(Shader& shader);
+    void DrawInstances(Shader& shader, int count);
 };
 
 void Model::loadModel(string path) {
@@ -171,6 +172,9 @@ void Model::Draw(Shader &shader) {
     for(auto mesh : this->meshes) mesh.Draw(shader);
 }
 
+void Model::DrawInstances(Shader &shader, int count) {
+    for(auto mesh : this->meshes) mesh.DrawInstances(shader, count);
+}
 
 float cubeVertices[] = {
         // positions          // normals           // texture coords

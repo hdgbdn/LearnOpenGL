@@ -39,6 +39,7 @@ public:
     vector<Texture> textures;
     unsigned int VAO;
     void Draw(Shader& shader);
+    void DrawInstances(Shader& shader, int count);
 };
 
 Mesh::Mesh(vector<Vertex> vertices,  vector<unsigned int> indices, vector<Texture> textures)
@@ -106,6 +107,42 @@ void Mesh::Draw(Shader& shader){
     // draw mesh
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    // always good practice to set everything back to defaults once configured.
+    glActiveTexture(GL_TEXTURE0);
+}
+
+void Mesh::DrawInstances(Shader& shader, int count) {
+    // bind appropriate textures
+    unsigned int nDiffuse = 1;
+    unsigned int nSpecular = 1;
+    unsigned int nNormal = 1;
+    unsigned int nHeight = 1;
+    for (unsigned int i = 0; i < textures.size(); i++)
+    {
+        glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
+        // retrieve texture number (the N in diffuse_textureN)
+        string number;
+        string name = textures[i].type;
+        if (name == "texture_diffuse")
+            number = std::to_string(nDiffuse++);
+        else if (name == "texture_specular")
+            number = std::to_string(nSpecular++); // transfer unsigned int to stream
+        else if (name == "texture_normal")
+            number = std::to_string(nNormal++); // transfer unsigned int to stream
+        else if (name == "texture_height")
+            number = std::to_string(nHeight++); // transfer unsigned int to stream
+
+        // now set the sampler to the correct texture unit
+        shader.set((name + number), (int)i);
+        // and finally bind the texture
+        glBindTexture(GL_TEXTURE_2D, textures[i].id);
+    }
+
+    // draw mesh
+    glBindVertexArray(VAO);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, count);
     glBindVertexArray(0);
 
     // always good practice to set everything back to defaults once configured.

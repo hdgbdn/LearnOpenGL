@@ -125,6 +125,8 @@ int main()
     shaders.push_back(reflection);
     Shader geo((shader_floder / "explode.vs").string(), (shader_floder / "explode.fs").string(), (shader_floder / "drawNormal.gs").string());
     shaders.push_back(geo);
+	Shader instance((shader_floder / "instance.vs").string(), (shader_floder / "instance.fs").string());
+    shaders.push_back(instance);
 	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
@@ -193,13 +195,30 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        geo.Use();
-        //geo.set("time", (float)glfwGetTime());
-        geo.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
-        test_model.Draw(geo);
-        shader.Use();
-        shader.set("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f)));
-        test_model.Draw(shader);
+        glm::mat4 modelGeo = glm::mat4(1.0f);
+        modelGeo = glm::scale(modelGeo, glm::vec3(0.01f, 0.01f, 0.01f));
+        instance.Use();
+    	//for(int i = 0; i < 1000; i++)
+    	//{
+     //       shader.set("model", glm::translate(modelGeo, glm::vec3(300 * i, 0, 0)));
+     //       test_model.Draw(shader);
+    	//}
+
+        glm::vec2 translations[1000];
+    	for(int i = 0; i < 1000; i++)
+    	{
+            glm::vec2 translation;
+            translation.x = i * 100;
+            translation.y = 0;
+            translations[i] = translation;
+    	}
+    	for(int i = 0; i < 1000; i++)
+    	{
+            instance.set(("offsets[" + std::to_string(i) + "]"), translations[i]);
+    	}
+        instance.set("time", (float)glfwGetTime());
+        instance.set("model", modelGeo);
+        test_model.DrawInstances(instance, 1000);
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);

@@ -1,6 +1,6 @@
 #version 330 core
 layout (triangles) in;
-layout (line_strip, max_vertices = 6) out;
+layout (line_strip, max_vertices = 12) out;
 
 layout (std140) uniform Matrices
 {
@@ -15,6 +15,7 @@ in VS_OUT{
     vec4 ViewNormal;
     vec4 ViewPos;
     vec4 ModelMovedPos;
+    vec4 WorldMovedPos;
 } gs_in[];
 
 out GS_OUT
@@ -30,6 +31,11 @@ void GenerateLine(int index)
     EmitVertex();
     //gl_Position = projection * (gs_in[index].ViewPos + gs_in[index].ViewNormal * MAGNITUDE);
     //gl_Position.w = gl_in[index].gl_Position.w;
+    gl_Position = projection * view * gs_in[index].WorldMovedPos;
+    EmitVertex();
+    EndPrimitive();
+    gl_Position = gl_in[index].gl_Position;
+    EmitVertex();
     gl_Position = projection * view * model * gs_in[index].ModelMovedPos;
     EmitVertex();
     EndPrimitive();
