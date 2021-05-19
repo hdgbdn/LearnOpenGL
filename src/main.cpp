@@ -13,12 +13,12 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadCubemap(vector<string> faces);
 vector<std::string> faces
 {
-    "right.jpg",
-        "left.jpg",
-        "top.jpg",
-        "bottom.jpg",
-        "front.jpg",
-        "back.jpg"
+	"right.jpg",
+		"left.jpg",
+		"top.jpg",
+		"bottom.jpg",
+		"front.jpg",
+		"back.jpg"
 };
 // settings
 unsigned int SCR_WIDTH = 2560;
@@ -38,6 +38,9 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 bool viewMode = false;
 bool needReloadShader = false;
+bool tapPressed = true;
+bool blinn = false;
+bool blinnKeyPressed = false;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -83,7 +86,6 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 4);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -127,6 +129,8 @@ int main()
     shaders.push_back(geo);
 	Shader instance((shader_floder / "instance.vs").string(), (shader_floder / "instance.fs").string());
     shaders.push_back(instance);
+	Shader advLight((shader_floder / "advanced_lighting.vs").string(), (shader_floder / "advanced_lighting.fs").string());
+    shaders.push_back(advLight);
 	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
@@ -166,6 +170,9 @@ int main()
 
     glUniformBlockBinding(shader.ID, uniformBlockSimple, 0);
     glUniformBlockBinding(skybox.ID, uniformBlockSkybox, 0);
+
+	// light
+    glm::vec3 lightPos(0.0f, 1.0f, 0.0f);
 	
     while (!glfwWindowShouldClose(window))
     {
@@ -183,7 +190,6 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
-        glEnable(GL_MULTISAMPLE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -196,30 +202,15 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        glm::mat4 modelGeo = glm::mat4(1.0f);
-        modelGeo = glm::scale(modelGeo, glm::vec3(0.01f, 0.01f, 0.01f));
-        instance.Use();
-    	//for(int i = 0; i < 1000; i++)
-    	//{
-     //       shader.set("model", glm::translate(modelGeo, glm::vec3(300 * i, 0, 0)));
-     //       test_model.Draw(shader);
-    	//}
-
-        glm::vec2 translations[40];
-    	for(int i = 0; i < 40; i++)
-    	{
-            glm::vec2 translation;
-            translation.x = i * 100;
-            translation.y = 0;
-            translations[i] = translation;
-    	}
-    	for(int i = 0; i < 40; i++)
-    	{
-            instance.set(("offsets[" + std::to_string(i) + "]"), translations[i]);
-    	}
-        instance.set("time", (float)glfwGetTime());
-        instance.set("model", modelGeo);
-        test_model.DrawInstances(instance, 40);
+        lightPos.x = sin(glfwGetTime());
+        lightPos.z = cos(glfwGetTime());
+        glm::mat4 model = glm::mat4(1.0f);
+        advLight.Use();
+        advLight.set("model", model);
+        advLight.set("lightPos", lightPos);
+        advLight.set("model", camera.Position);
+        advLight.set("blinn", blinn);
+        plane.Draw(advLight);   
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
@@ -228,10 +219,6 @@ int main()
         meshSkybox.Draw(skybox);
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
-    	
-        void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        // make sure to tell OpenGL we're done with the pointer
-        glUnmapBuffer(GL_ARRAY_BUFFER);
     	
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -245,8 +232,23 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !tapPressed)
+    {
+        tapPressed = true;
         needReloadShader = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
+        tapPressed = false;
+	
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !blinnKeyPressed)
+    {
+        blinnKeyPressed = true;
+        blinn = !blinn;
+    }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+        blinnKeyPressed = false;
+	
+	
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
         viewMode = true;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);

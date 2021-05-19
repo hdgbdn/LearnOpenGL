@@ -152,8 +152,8 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_R);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -222,13 +222,14 @@ float cubeVertices[] = {
 };
 
 float planeVertices[] = {
-    // positions          // normals           // texture coords
-        0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-    0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-    -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-    0.5f,  0.5f, 0.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    // positions            // normals         // texcoords
+     10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+    -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+     10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+     10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
 };
 
 float skyboxVertices[] = {
@@ -300,7 +301,7 @@ void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, uns
 		indicies.push_back(i);
 	}
 	Texture texture;
-    std::string path = (filesystem::current_path().parent_path().parent_path()/"res"/"textures").string();
+    std::string path = (filesystem::current_path().parent_path().parent_path()/"res"/"textures"/name).string();
     texture.id = TextureFromFile(name, path.c_str());
     texture.type = "texture_diffuse";
     texture.path = path.c_str();
@@ -311,7 +312,7 @@ void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, uns
 // default objects
 void SetDefaultMesh(){
     SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8, 3, 3, 2,cube, "wall.jpg");
-    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "grass.png");
+    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "wood.png");
     SetMesh(skyboxVertices, sizeof(skyboxVertices)/sizeof(skyboxVertices[0])/3, 3, 0, 0, meshSkybox, "grass.png");
 }
 
