@@ -83,7 +83,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -183,6 +183,7 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
+        glEnable(GL_MULTISAMPLE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -204,21 +205,21 @@ int main()
      //       test_model.Draw(shader);
     	//}
 
-        glm::vec2 translations[1000];
-    	for(int i = 0; i < 1000; i++)
+        glm::vec2 translations[40];
+    	for(int i = 0; i < 40; i++)
     	{
             glm::vec2 translation;
             translation.x = i * 100;
             translation.y = 0;
             translations[i] = translation;
     	}
-    	for(int i = 0; i < 1000; i++)
+    	for(int i = 0; i < 40; i++)
     	{
             instance.set(("offsets[" + std::to_string(i) + "]"), translations[i]);
     	}
         instance.set("time", (float)glfwGetTime());
         instance.set("model", modelGeo);
-        test_model.DrawInstances(instance, 1000);
+        test_model.DrawInstances(instance, 40);
     	
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
