@@ -182,7 +182,7 @@ int main()
 	// shadow map
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
-    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
     unsigned int depthMap;
     glGenTextures(1, &depthMap);
@@ -252,14 +252,17 @@ int main()
         glm::mat4 cubeModel = glm::translate(planeModel, glm::vec3(0.0f, 4.0f, 0.0f));
         shadowMap.set("model", cubeModel);
         cube.Draw(shadowMap);
+        glm::mat4 testModel = glm::scale(planeModel, glm::vec3(0.01f, 0.01f, 0.01f));
+        shadowMap.set("model", testModel);
+        test_model.Draw(shadowMap);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     	// render scene with shadow mapping
         shadow.Use();
-        glActiveTexture(GL_TEXTURE1);
-        shadow.set("shadowMap", 1);
+        glActiveTexture(GL_TEXTURE2);
+        shadow.set("shadowMap", 2);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         shadow.set("lightPos", lightPos);
         shadow.set("viewPos", camera.Position);
@@ -267,7 +270,10 @@ int main()
         shadow.set("worldToLightSpace", worldToLightSpace);
         plane.Draw(shadow);
         shadow.set("model", cubeModel);
+        shadow.set("shadowMap", 2);
         cube.Draw(shadow);
+        shadow.set("model", testModel);
+        test_model.Draw(shadow);
 
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
