@@ -32,7 +32,7 @@ const std::string f_shader_name = "simple_fragment.fs";
 const std::string v_outline_name = "outline.vs";
 const std::string f_outline_name = "outline.fs";
 
-Camera camera(glm::vec3(1.0f, 0.0f, 6.0f));
+Camera camera(glm::vec3(1.0f, 2.0f, 10.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -131,6 +131,12 @@ int main()
     shaders.push_back(instance);
 	Shader advLight((shader_floder / "advanced_lighting.vs").string(), (shader_floder / "advanced_lighting.fs").string());
     shaders.push_back(advLight);
+	Shader gamma((shader_floder / "gamma.vs").string(), (shader_floder / "gamma.fs").string());
+    shaders.push_back(gamma);
+	Shader shadowMap((shader_floder / "shadowMap.vs").string(), (shader_floder / "shadowMap.fs").string());
+    shaders.push_back(shadowMap);
+	Shader shadow((shader_floder / "shadow.vs").string(), (shader_floder / "shadow.fs").string());
+    shaders.push_back(shadow);
 	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
@@ -167,12 +173,36 @@ int main()
 
     unsigned int uniformBlockSimple = glGetUniformBlockIndex(shader.ID, "Matrices");
     unsigned int uniformBlockSkybox = glGetUniformBlockIndex(skybox.ID, "Matrices");
+    unsigned int uniformBlockShadow = glGetUniformBlockIndex(shadowMap.ID, "Matrices");
 
     glUniformBlockBinding(shader.ID, uniformBlockSimple, 0);
     glUniformBlockBinding(skybox.ID, uniformBlockSkybox, 0);
+    glUniformBlockBinding(shadowMap.ID, uniformBlockSkybox, 0);
 
-	// light
-    glm::vec3 lightPos(0.0f, 1.0f, 0.0f);
+	// shadow map
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT,
+        0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// bind FBO and texture
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	
 	
     while (!glfwWindowShouldClose(window))
     {
@@ -192,6 +222,14 @@ int main()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // light
+        glm::vec3 lightPos(-10.0 * sin(currentFrame), 10.0f, -10.0f * cos(currentFrame));
+        glm::vec3 lightCenter(0.0f, 0.0f, 0.0f);
+        glm::mat4 lightProjection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 1.0f, 30.0f);
+        glm::mat4 lightView = glm::lookAt(lightPos,
+            lightCenter,
+            glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 worldToLightSpace = lightProjection * lightView;
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
     	
@@ -202,16 +240,35 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        lightPos.x = sin(glfwGetTime());
-        lightPos.z = cos(glfwGetTime());
-        glm::mat4 model = glm::mat4(1.0f);
-        advLight.Use();
-        advLight.set("model", model);
-        advLight.set("lightPos", lightPos);
-        advLight.set("model", camera.Position);
-        advLight.set("blinn", blinn);
-        plane.Draw(advLight);   
-    	
+    	// draw shadow map
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        shadowMap.Use();
+        shadowMap.set("worldToLightSpace", worldToLightSpace);
+        glm::mat4 planeModel = glm::mat4(1.0f);
+        shadowMap.set("model", planeModel);
+        plane.Draw(shadowMap);
+        glm::mat4 cubeModel = glm::translate(planeModel, glm::vec3(0.0f, 4.0f, 0.0f));
+        shadowMap.set("model", cubeModel);
+        cube.Draw(shadowMap);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    	// render scene with shadow mapping
+        shadow.Use();
+        glActiveTexture(GL_TEXTURE1);
+        shadow.set("shadowMap", 1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        shadow.set("lightPos", lightPos);
+        shadow.set("viewPos", camera.Position);
+        shadow.set("model", planeModel);
+        shadow.set("worldToLightSpace", worldToLightSpace);
+        plane.Draw(shadow);
+        shadow.set("model", cubeModel);
+        cube.Draw(shadow);
+
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
         skybox.Use();

@@ -14,6 +14,5 @@ void main()
 {
     vec4 texColor = texture(texture_diffuse1, fs_in.TexCoords);
     FragColor = texColor;
-    //FragColor = vec4(0.5, 1.0, 1.0, 1.0);
 }
 
