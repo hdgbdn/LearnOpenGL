@@ -45,30 +45,6 @@ bool blinnKeyPressed = false;
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
-void DrawCube(Shader& shader)
-{
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    shader.Use();
-
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    shader.SetMVP(model, view, projection);
-    cube.Draw(shader);
-}
-
-void DrawPlane(Shader& shader)
-{
-
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    shader.Use();
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
-    shader.SetMVP(model, view, projection);
-    plane.Draw(shader);
-}
-
 void DrawSkyBox(Shader& shader)
 {
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -137,31 +113,16 @@ int main()
     shaders.push_back(shadowMap);
 	Shader shadow((shader_floder / "shadow.vs").string(), (shader_floder / "shadow.fs").string());
     shaders.push_back(shadow);
+    Shader cubeShadowMapShader((shader_floder / "cubeShadowMap.vs").string(), (shader_floder / "cubeShadowMap.fs").string(), (shader_floder / "cubeShadowMap.gs").string());
+    shaders.push_back(cubeShadowMapShader);
+    Shader cubeShadowShader((shader_floder / "cubeShadow.vs").string(), (shader_floder / "cubeShadow.fs").string());
+    shaders.push_back(cubeShadowShader);
 	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
     SetDefaultMesh();
 
-	// geo shader object
-    float points[] = {
-    -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
-     0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
-    -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
-    };
-    unsigned VAO, VBO;
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points), &points, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2*sizeof(float)));
-    glBindVertexArray(0);
-	// create skybox
-    unsigned int cubemapTexture = loadCubemap(faces);
+    unsigned int skyboxCubeTexture = loadCubemap(faces);
 
 	// using uniform buffers
     unsigned int ubo;
@@ -184,25 +145,26 @@ int main()
     glGenFramebuffers(1, &depthMapFBO);
     const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
-    unsigned int depthMap;
-    glGenTextures(1, &depthMap);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT,
-        0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // generated cube map for point shadowing
+    unsigned int cubeShadowMap;
+    glGenTextures(1, &cubeShadowMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeShadowMap);
+    for (unsigned int i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+            SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	// bind FBO and texture
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, cubeShadowMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-	
 	
     while (!glfwWindowShouldClose(window))
     {
@@ -223,16 +185,27 @@ int main()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // light
-        glm::vec3 lightPos(-10.0 * sin(currentFrame), 10.0f, -10.0f * cos(currentFrame));
-        glm::vec3 lightCenter(0.0f, 0.0f, 0.0f);
-        glm::mat4 lightProjection = glm::ortho(-10.f, 10.f, -10.f, 10.f, 1.0f, 30.0f);
-        glm::mat4 lightView = glm::lookAt(lightPos,
-            lightCenter,
-            glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 worldToLightSpace = lightProjection * lightView;
-
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glm::vec3 lightPos(-5.0 * sin(currentFrame), 6.0f, -5.0f * cos(currentFrame));
+        float aspect = (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT;
+        float farPlane = 25.0f;
+        glm::mat4 lightProjection = glm::perspective(glm::radians(90.0f), aspect, 1.0f, farPlane);
     	
+        vector<glm::mat4> worldToLightProjection;
+        worldToLightProjection.push_back(lightProjection *
+            glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        worldToLightProjection.push_back(lightProjection *
+            glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        worldToLightProjection.push_back(lightProjection *
+            glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+        worldToLightProjection.push_back(lightProjection *
+            glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+        worldToLightProjection.push_back(lightProjection *
+            glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+        worldToLightProjection.push_back(lightProjection *
+            glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubeTexture);
+
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
@@ -240,44 +213,41 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    	// draw shadow map
+        // draw shadow map
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        shadowMap.Use();
-        shadowMap.set("worldToLightSpace", worldToLightSpace);
-        glm::mat4 planeModel = glm::mat4(1.0f);
-        shadowMap.set("model", planeModel);
-        plane.Draw(shadowMap);
-        glm::mat4 cubeModel = glm::translate(planeModel, glm::vec3(0.0f, 4.0f, 0.0f));
-        shadowMap.set("model", cubeModel);
-        cube.Draw(shadowMap);
+        cubeShadowMapShader.Use();
+        for (int i = 0; i < 6; i++) cubeShadowMapShader.set("shadowMatrices[" + std::to_string(i) + "]", worldToLightProjection[i]);
+        cubeShadowMapShader.set("far_plane", farPlane);
+        cubeShadowMapShader.set("lightPos", lightPos);
+    	glm::mat4 planeModel = glm::mat4(1.0f);
+        cubeShadowMapShader.set("model", planeModel);
+        plane.Draw(cubeShadowMapShader);
         glm::mat4 testModel = glm::scale(planeModel, glm::vec3(0.01f, 0.01f, 0.01f));
-        shadowMap.set("model", testModel);
-        test_model.Draw(shadowMap);
+        cubeShadowMapShader.set("model", testModel);
+        test_model.Draw(cubeShadowMapShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     	// render scene with shadow mapping
-        shadow.Use();
+        cubeShadowShader.Use();
         glActiveTexture(GL_TEXTURE2);
-        shadow.set("shadowMap", 2);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
-        shadow.set("lightPos", lightPos);
-        shadow.set("viewPos", camera.Position);
-        shadow.set("model", planeModel);
-        shadow.set("worldToLightSpace", worldToLightSpace);
-        plane.Draw(shadow);
-        shadow.set("model", cubeModel);
-        shadow.set("shadowMap", 2);
-        cube.Draw(shadow);
-        shadow.set("model", testModel);
-        test_model.Draw(shadow);
+        cubeShadowShader.set("model", planeModel);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeShadowMap);
+        cubeShadowShader.set("shadowMap", 2);
+        cubeShadowShader.set("lightPos", lightPos);
+        cubeShadowShader.set("viewPos", camera.Position);
+        cubeShadowShader.set("far_plane", farPlane);
+        plane.Draw(cubeShadowShader);
+        cubeShadowShader.set("model", testModel);
+        test_model.Draw(cubeShadowShader);
 
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
         skybox.Use();
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubeTexture);
         skybox.set("skybox", 0);
         meshSkybox.Draw(skybox);
         glDepthMask(GL_TRUE);
