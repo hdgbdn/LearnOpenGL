@@ -317,7 +317,8 @@ void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, uns
 // default objects
 void SetDefaultMesh(){
     SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8, 3, 3, 2,cube, "wall.jpg");
-    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "brickwall.jpg");
-    AddTexture(plane, "texture_normal", "brickwall_normal.jpg");
+    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "bricks2.jpg");
+    AddTexture(plane, "texture_normal", "bricks2_normal.jpg");
+    AddTexture(plane, "texture_height", "bricks2_disp.jpg");
     SetMesh(skyboxVertices, sizeof(skyboxVertices)/sizeof(skyboxVertices[0])/3, 3, 0, 0, meshSkybox, "grass.png");
 }

@@ -117,6 +117,8 @@ int main()
     shaders.push_back(cubeShadowMapShader);
     Shader cubeShadowShader((shader_floder / "cubeShadow.vs").string(), (shader_floder / "cubeShadow.fs").string(), (shader_floder / "cubeShadow.gs").string());
     shaders.push_back(cubeShadowShader);
+    Shader parallax((shader_floder / "parallax.vs").string(), (shader_floder / "parallax.fs").string(), (shader_floder / "parallax.gs").string());
+    shaders.push_back(parallax);
     fs::path test_model_path(fs::current_path().parent_path().parent_path() / "res" / "model" / "pony-car" / "source" / "Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
@@ -222,6 +224,7 @@ int main()
         cubeShadowMapShader.set("far_plane", farPlane);
         cubeShadowMapShader.set("lightPos", lightPos);
     	glm::mat4 planeModel = glm::mat4(1.0f);
+        //planeModel = glm::rotate(planeModel, glm::sin(currentFrame/10), glm::vec3(1.0f, 1.0f, 0.0f));
         cubeShadowMapShader.set("model", planeModel);
         plane.Draw(cubeShadowMapShader);
         glm::mat4 testModel = glm::scale(planeModel, glm::vec3(0.01f, 0.01f, 0.01f));
@@ -232,17 +235,18 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     	// render scene with shadow mapping
-        cubeShadowShader.Use();
+        parallax.Use();
         glActiveTexture(GL_TEXTURE2);
-        cubeShadowShader.set("model", planeModel);
+        parallax.set("model", planeModel);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubeShadowMap);
-        cubeShadowShader.set("shadowMap", 2);
-        cubeShadowShader.set("lightPos", lightPos);
-        cubeShadowShader.set("viewPos", camera.Position);
-        cubeShadowShader.set("far_plane", farPlane);
-        plane.Draw(cubeShadowShader);
-        cubeShadowShader.set("model", testModel);
-        test_model.Draw(cubeShadowShader);
+        parallax.set("shadowMap", 2);
+        parallax.set("lightPos", lightPos);
+        parallax.set("viewPos", camera.Position);
+        parallax.set("far_plane", farPlane);
+        parallax.set("height_scale", 0.1f);
+        plane.Draw(parallax);
+        parallax.set("model", testModel);
+        test_model.Draw(parallax);
 
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
