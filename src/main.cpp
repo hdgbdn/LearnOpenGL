@@ -115,9 +115,9 @@ int main()
     shaders.push_back(shadow);
     Shader cubeShadowMapShader((shader_floder / "cubeShadowMap.vs").string(), (shader_floder / "cubeShadowMap.fs").string(), (shader_floder / "cubeShadowMap.gs").string());
     shaders.push_back(cubeShadowMapShader);
-    Shader cubeShadowShader((shader_floder / "cubeShadow.vs").string(), (shader_floder / "cubeShadow.fs").string());
+    Shader cubeShadowShader((shader_floder / "cubeShadow.vs").string(), (shader_floder / "cubeShadow.fs").string(), (shader_floder / "cubeShadow.gs").string());
     shaders.push_back(cubeShadowShader);
-	fs::path test_model_path(fs::current_path().parent_path().parent_path() /"res"/"model"/"pony-car"/"source"/"Pony_cartoon.obj");
+    fs::path test_model_path(fs::current_path().parent_path().parent_path() / "res" / "model" / "pony-car" / "source" / "Pony_cartoon.obj");
     Model test_model(test_model_path.string().c_str());
 
     SetDefaultMesh();
@@ -185,7 +185,7 @@ int main()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // light
-        glm::vec3 lightPos(-5.0 * sin(currentFrame), 6.0f, -5.0f * cos(currentFrame));
+        glm::vec3 lightPos(-5.0f * sin(currentFrame), 5.0f, -5.0f * cos(currentFrame));
         float aspect = (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT;
         float farPlane = 25.0f;
         glm::mat4 lightProjection = glm::perspective(glm::radians(90.0f), aspect, 1.0f, farPlane);

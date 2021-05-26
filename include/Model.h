@@ -281,6 +281,16 @@ Mesh cube;
 Mesh plane;
 Mesh meshSkybox;
 
+void AddTexture(Mesh& mesh, string type, string name)
+{
+    Texture texture;
+    std::string path = (filesystem::current_path().parent_path().parent_path() / "res" / "textures" / name).string();
+    texture.id = TextureFromFile(name.c_str(), path.c_str());
+    texture.type = type;
+    texture.path = path;
+    mesh.textures.push_back(texture);
+}
+
 void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, unsigned int nNorm, unsigned int nUV, Mesh& dest, const char* name) {
 	vector<Vertex> verties;
 	vector<unsigned int> indicies;
@@ -300,28 +310,14 @@ void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, uns
 		verties.push_back(vert);
 		indicies.push_back(i);
 	}
-	Texture texture;
-    std::string path = (filesystem::current_path().parent_path().parent_path()/"res"/"textures"/name).string();
-    texture.id = TextureFromFile(name, path.c_str());
-    texture.type = "texture_diffuse";
-    texture.path = path.c_str();
-    textures.push_back(texture);
     dest = Mesh(verties, indicies, textures);
+    AddTexture(dest, "texture_diffuse", name);
 }
 
 // default objects
 void SetDefaultMesh(){
     SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8, 3, 3, 2,cube, "wall.jpg");
-    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "wood.png");
+    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "brickwall.jpg");
+    AddTexture(plane, "texture_normal", "brickwall_normal.jpg");
     SetMesh(skyboxVertices, sizeof(skyboxVertices)/sizeof(skyboxVertices[0])/3, 3, 0, 0, meshSkybox, "grass.png");
-}
-
-void ChangeTexture(Mesh& mesh, unsigned int id, string type = "texture_diffuse", string path = "default.png")
-{
-    Texture texture;
-    texture.id = id;
-    texture.type = type;
-    texture.path = path.c_str();
-    mesh.textures.clear();
-    mesh.textures.push_back(texture);
 }
