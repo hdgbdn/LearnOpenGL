@@ -2,7 +2,6 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "Model.h"
-#include "CommonHeader.h"
 namespace fs = std::filesystem;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);

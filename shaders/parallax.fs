@@ -37,7 +37,7 @@ float ShadowCalculation(vec3 fragPos)
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 {
 
-    const float numLayers = 10;
+    const float numLayers = 40;
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
     vec2 P = viewDir.xy * height_scale; 
