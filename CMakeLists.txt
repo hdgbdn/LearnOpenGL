@@ -30,3 +30,6 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/assimp)
 
 add_executable("hdr" src/hdr.cpp src/Camera.cpp src/Shader.cpp)
 target_link_libraries("hdr" glad glfw OpenGL::GL assimp)
+
+add_executable("bloom" src/bloom.cpp src/Camera.cpp src/Shader.cpp)
+target_link_libraries("bloom" glad glfw OpenGL::GL assimp)
