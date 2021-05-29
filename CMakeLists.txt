@@ -36,3 +36,6 @@ target_link_libraries("bloom" glad glfw OpenGL::GL assimp)
 
 add_executable("deffered" src/deffered.cpp src/Camera.cpp src/Shader.cpp)
 target_link_libraries("deffered" glad glfw OpenGL::GL assimp)
+
+add_executable("SSAO" src/SSAO.cpp src/Camera.cpp src/Shader.cpp)
+target_link_libraries("SSAO" glad glfw OpenGL::GL assimp)
