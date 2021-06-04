@@ -42,3 +42,6 @@ target_link_libraries("SSAO" glad glfw OpenGL::GL assimp)
 
 add_executable("pbr" src/pbr.cpp src/Camera.cpp src/Shader.cpp)
 target_link_libraries("pbr" glad glfw OpenGL::GL assimp)
+
+add_executable("IBL_Diffuse" src/IBL_Diffuse.cpp src/Camera.cpp src/Shader.cpp)
+target_link_libraries("IBL_Diffuse" glad glfw OpenGL::GL assimp)
