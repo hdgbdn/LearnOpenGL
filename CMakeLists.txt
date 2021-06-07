@@ -9,27 +9,19 @@ find_package(OpenGL REQUIRED)
 
 # include
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/glfw/include)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/glm)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/assimp/include)
 
-# execute
+# flags
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 
 # add subdirectory glm GLAD GLFW 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glfw)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glad)
-
-set(ASSIMP_BUILD_TESTS OFF CACHE "" INTERNAL FORCE)
-set(ASSIMP_INSTALL OFF CACHE "" INTERNAL FORCE)
-
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/assimp)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glfw)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glad)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/assimp)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glm)
 
 add_executable("hdr" src/hdr.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("hdr" glad glfw OpenGL::GL assimp)
+target_link_libraries("hdr" glad glfw OpenGL::GL assimp glm::glm)
 
 add_executable("bloom" src/bloom.cpp src/Camera.cpp src/Shader.cpp)
 target_link_libraries("bloom" glad glfw OpenGL::GL assimp)

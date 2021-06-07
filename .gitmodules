@@ -1,12 +1,12 @@
 [submodule "glfw"]
-	path = glfw
+	path = 3rd/glfw
 	url = https://github.com/glfw/glfw.git
 [submodule "glad"]
-	path = glad
+	path = 3rd/glad
 	url = https://github.com/Dav1dde/glad.git
 [submodule "glm"]
-	path = glm
+	path = 3rd/glm
 	url = https://github.com/g-truc/glm.git
 [submodule "assimp"]
-	path = assimp
+	path = 3rd/assimp
 	url = https://github.com/assimp/assimp.git
