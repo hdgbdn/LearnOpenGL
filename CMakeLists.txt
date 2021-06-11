@@ -1,18 +1,22 @@
+macro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES TARGET_LIBS)
+    add_executable(${TARGET_NAME} ${TARGET_SOURCES})
+    target_link_libraries(${TARGET_NAME} ${TARGET_LIBS})
+endmacro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES)
+
+macro(ADD_ALLSUBDIR)
+    file(GLOB children RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
+    foreach(child ${children})
+        if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${child})
+            add_subdirectory(${child})
+        endif()
+    endforeach()
+endmacro(ADD_ALLSUBDIR)
+
 cmake_minimum_required(VERSION 3.3)
 project(LearnOpenGL)
 
 # find packages
-if(POLICY CMP0072)
-    cmake_policy(SET CMP0072 NEW)
-endif()
 find_package(OpenGL REQUIRED)
-
-# include
-include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
-
-# flags
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # add subdirectory glm GLAD GLFW 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glfw)
@@ -20,23 +24,47 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glad)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/assimp)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glm)
 
-add_executable("hdr" src/hdr.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("hdr" glad glfw OpenGL::GL assimp glm::glm)
+# add examples
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/Examples)
 
-add_executable("bloom" src/bloom.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("bloom" glad glfw OpenGL::GL assimp)
+# libs #
+## Learn OpenGL lib ##
+file(GLOB LOPGL_SRC
+    "src/LOPGL/Camera.cpp"
+    "src/LOPGL/Shader.cpp"
+)
+add_library(LOPGL STATIC
+    ${LOPGL_SRC}
+)
+target_include_directories(LOPGL 
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/include/LOPGL
+    )
+target_link_libraries(LOPGL glad glfw OpenGL::GL assimp glm::glm)
 
-add_executable("deffered" src/deffered.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("deffered" glad glfw OpenGL::GL assimp)
+## My personal utils
+file(GLOB HDGBDN_SRC
+     "src/Utility/*.cpp"
+)
+add_library(HDGBDN STATIC
+    ${HDGBDN_SRC}
+)
+target_include_directories(HDGBDN 
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/Utility
+)
+target_link_libraries(HDGBDN glad glfw)
 
-add_executable("SSAO" src/SSAO.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("SSAO" glad glfw OpenGL::GL assimp)
+# flags
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable("pbr" src/pbr.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("pbr" glad glfw OpenGL::GL assimp)
+# an old build
+add_executable("hdr" src/hdr.cpp)
+target_link_libraries("hdr" glad glfw OpenGL::GL assimp glm::glm LOPGL HDGBDN)
 
-add_executable("IBL_Diffuse" src/IBL_Diffuse.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("IBL_Diffuse" glad glfw OpenGL::GL assimp)
+# add sub example targets
 
-add_executable("IBL_Specular" src/IBL_Specular.cpp src/Camera.cpp src/Shader.cpp)
-target_link_libraries("IBL_Specular" glad glfw OpenGL::GL assimp)
+# add libraies
+
+# link example targets and libraies
