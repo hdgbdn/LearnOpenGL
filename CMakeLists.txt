@@ -1,6 +1,11 @@
 macro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES TARGET_LIBS)
     add_executable(${TARGET_NAME} ${TARGET_SOURCES})
-    target_link_libraries(${TARGET_NAME} ${TARGET_LIBS})
+    target_link_libraries(${TARGET_NAME} PUBLIC 
+            ${TARGET_LIBS})
+    set_target_properties(${TARGET_NAME} PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+            )
 endmacro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES)
 
 macro(ADD_ALLSUBDIR)
@@ -12,7 +17,7 @@ macro(ADD_ALLSUBDIR)
     endforeach()
 endmacro(ADD_ALLSUBDIR)
 
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.10)
 project(LearnOpenGL)
 
 # find packages
@@ -30,8 +35,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/Examples)
 # libs #
 ## Learn OpenGL lib ##
 file(GLOB LOPGL_SRC
-    "src/LOPGL/Camera.cpp"
-    "src/LOPGL/Shader.cpp"
+    "src/LOPGL/*.cpp"
 )
 add_library(LOPGL STATIC
     ${LOPGL_SRC}
@@ -55,9 +59,10 @@ target_include_directories(HDGBDN
 )
 target_link_libraries(HDGBDN glad glfw)
 
-# flags
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set_target_properties(HDGBDN PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+            )
 
 # an old build
 add_executable("hdr" src/hdr.cpp)
