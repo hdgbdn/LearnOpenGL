@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _OPQUEUE_H_
+#define _OPQUEUE_H_
 
 #include "Operation.h"
 #include <list>
@@ -24,3 +25,5 @@ namespace Hdgbdn
 		OpQueue operator=(const OpQueue&) = delete;
 	};
 }
+
+#endif

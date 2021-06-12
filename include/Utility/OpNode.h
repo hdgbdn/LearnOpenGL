@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _OPNODE_H_
+#define _OPNODE_H_
 
 #include "OpQueue.h"
 #include "LambdaOp.h"
@@ -29,3 +30,5 @@ namespace Hdgbdn
 		OpNode operator=(const OpNode&) = delete;
 	};
 }
+
+#endif

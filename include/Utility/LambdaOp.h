@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _LAMBDAOP_H_
+#define _LAMBDAOP_H_
 #include "Operation.h"
 #include <functional>
 namespace Hdgbdn
@@ -19,3 +20,4 @@ namespace Hdgbdn
 	};
 }
 
+#endif
