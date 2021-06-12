@@ -14,6 +14,7 @@ namespace Hdgbdn
     {
     public:
         Window(unsigned int width, unsigned int height, const string& name);
+        void CloseWindow();
         void Terminate();
         int GetKey(int key);
         GLFWAPI GLFWglproc GetProcAddress(const char* procname);

@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "EventMgr.h"
 #include <iostream>
 
 using namespace std;
@@ -26,6 +27,19 @@ Window::Window(unsigned int width, unsigned int height, const string &name)
     glfwMakeContextCurrent(w);
 	glfwSetFramebufferSizeCallback(w, CB_FrameBufferSize);
     LoadGL();
+    glViewport(0, 0, width, height);
+
+	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scanCode, int action, int mods)
+		{
+			switch (action)
+			{
+			case GLFW_RELEASE:
+				EventMgr::GetInstance()->TrigerEvent(key, EventMgr::CLICK);
+			case GLFW_PRESS:
+				EventMgr::GetInstance()->TrigerEvent(key, EventMgr::PRESSS);
+			}
+
+		});
 }
 
 void Window::CB_FrameBufferSize(GLFWwindow* window, int width, int height){
@@ -66,3 +80,9 @@ void Window::Run(Ptr<Operation>& op)
 		}
 	}
 }
+
+void Window::CloseWindow()
+{
+    glfwSetWindowShouldClose(window, true);
+}
+

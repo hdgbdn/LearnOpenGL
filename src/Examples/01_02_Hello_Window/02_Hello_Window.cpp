@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "LambdaOp.h"
 #include "OpQueue.h"
+#include "EventMgr.h"
 
 #include <iostream>
 
@@ -21,6 +22,15 @@ int main()
 {
 	cout << APP_NAME << endl;
 	Window window(SCR_WIDTH, SCR_HEIGHT, APP_NAME);
+	
+	auto initOp = new LambdaOp([&]()
+		{
+			EventMgr::GetInstance()->SetKeyPress(GLFW_KEY_ESCAPE, new LambdaOp([&]()
+			{
+					window.CloseWindow();
+			}));
+		}
+	, false);
 	auto renderOp = new LambdaOp([]()
 		{
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -33,7 +43,7 @@ int main()
 			glfwPollEvents();
 	});
 	auto opQueue = new OpQueue;
-	(*opQueue) << renderOp << endOp;
+	(*opQueue) << initOp << renderOp << endOp;
 	window.Run(opQueue);
 	return 0;
 }
