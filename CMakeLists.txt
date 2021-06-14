@@ -1,4 +1,10 @@
-macro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES TARGET_LIBS)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
+
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
+macro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES TARGET_LIBS TARGET_INSTALL_DIRS)
     add_executable(${TARGET_NAME} ${TARGET_SOURCES})
     target_link_libraries(${TARGET_NAME} PUBLIC 
             ${TARGET_LIBS})
@@ -6,7 +12,19 @@ macro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES TARGET_LIBS)
             CXX_STANDARD 17
             CXX_EXTENSIONS OFF
             )
-endmacro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES)
+    install(TARGETS ${TARGET_NAME}
+            RUNTIME DESTINATION "${TARGET_NAME}/bin"
+            LIBRARY DESTINATION "${TARGET_NAME}/lib"
+            ARCHIVE DESTINATION "${TARGET_NAME}/lib/static"
+    )
+    foreach(install_dir ${TARGET_INSTALL_DIRS})
+        if(install_dir)
+            message("${CMAKE_CURRENT_SOURCE_DIR}/${install_dir}")
+            install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${install_dir}"
+            DESTINATION "${TARGET_NAME}")
+        endif()
+    endforeach(install_dir)
+endmacro(ADD_SUB_EXAMPLE TARGET_NAME TARGET_SOURCES TARGET_LIBS TARGET_INSTALL_DIRS)
 
 macro(ADD_ALLSUBDIR)
     file(GLOB children RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
@@ -63,10 +81,6 @@ set_target_properties(HDGBDN PROPERTIES
             CXX_STANDARD 17
             CXX_EXTENSIONS OFF
             )
-
-# an old build
-add_executable("hdr" src/hdr.cpp)
-target_link_libraries("hdr" glad glfw OpenGL::GL assimp glm::glm LOPGL HDGBDN)
 
 # add sub example targets
 
