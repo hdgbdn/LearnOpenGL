@@ -20,7 +20,7 @@ using namespace Hdgbdn;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-const string APP_NAME = "EBO";
+const string APP_NAME = "Hello ImGui";
 
 static void glfw_error_callback(int error, const char* description)
 {
