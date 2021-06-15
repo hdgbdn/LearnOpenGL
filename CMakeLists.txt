@@ -41,11 +41,8 @@ project(LearnOpenGL)
 # find packages
 find_package(OpenGL REQUIRED)
 
-# add subdirectory glm GLAD GLFW 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glfw)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glad)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/assimp)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd/glm)
+# add 3rd subdirectory 
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/3rd)
 
 # add examples
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/Examples)
