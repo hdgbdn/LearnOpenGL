@@ -79,8 +79,6 @@ set_target_properties(HDGBDN PROPERTIES
             CXX_EXTENSIONS OFF
             )
 
-# add sub example targets
-
-# add libraies
-
-# link example targets and libraies
+# install resources
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/res"
+    DESTINATION "/")
