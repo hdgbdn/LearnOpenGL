@@ -36,14 +36,12 @@ int main(int, char**)
 	ImGui_ImplOpenGL3_Init("#version 130");
 
     float vertices[] = {
-     0.5f,  0.5f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
-    };
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
+     0.5f,  0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f,
+    -0.5f,  0.5f, 0.0f,
+     0.5f,  0.5f, 0.0f,
     };
 
     // 1.generate buffer and data object
@@ -56,9 +54,6 @@ int main(int, char**)
 	// 2.bind our VBO to array buffer, and copy vertices into a vertex buffer for OpenGL
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	// 3.bind our EBO to element buffer,copy index array into a element buffer for OpenGL
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	// 4.set the vertex attributes pointers
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -71,6 +66,7 @@ int main(int, char**)
 
 	auto renderOp = new LambdaOp([&]()
 		{
+            glfwPollEvents();
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
@@ -80,7 +76,7 @@ int main(int, char**)
 				static float f = 0.0f;
 				static int counter = 0;
 
-				ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+				ImGui::Begin(APP_NAME.c_str()); // Create a window called "Hello, world!" and append into it.
 
 				
 				ImGui::End();
@@ -89,12 +85,13 @@ int main(int, char**)
 			// Rendering
             glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
-			ImGui::Render();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             shader.Use();
             glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
+
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			glfwSwapBuffers(window.GetWindow());
 		});
     auto opQueue = new OpQueue;
