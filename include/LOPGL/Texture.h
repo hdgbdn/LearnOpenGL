@@ -13,7 +13,7 @@ namespace Hdgbdn
 		int width, height, nrComponents;
 	public:
 		Texture();
-		Texture(const char* path, bool flip = false, int wrapping = GL_TEXTURE_WRAP_R, int filtering = GL_LINEAR);
+		Texture(const char* path, bool flip = true, int wrapping = GL_TEXTURE_WRAP_R, int filtering = GL_LINEAR);
 		unsigned int GetID();
 	};
 }
