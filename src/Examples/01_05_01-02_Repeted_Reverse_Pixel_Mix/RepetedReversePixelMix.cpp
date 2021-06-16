@@ -50,7 +50,7 @@ int main(int, char**)
     };
 
     Texture tex_1((texture_path / "wall.jpg").string().c_str(), true, GL_REPEAT);
-    Texture tex_2((texture_path / "smile.jpg").string().c_str());
+    Texture tex_2((texture_path / "smile.jpg").string().c_str(),true, GL_REPEAT, GL_NEAREST);
 	
     unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
