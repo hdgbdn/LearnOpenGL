@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-const string APP_NAME = "EBO";
+const string APP_NAME = "Hello Triangle";
 
 
 int main()
