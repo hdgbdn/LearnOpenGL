@@ -11,8 +11,10 @@
 #include "LambdaOp.h"
 #include "OpQueue.h"
 #include "Shader.h"
+#include "Camera.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "Texture.h"
+#include "EventMgr.h"
 
 using namespace std;
 using namespace Hdgbdn;
@@ -129,6 +131,11 @@ int main(int, char**)
 
             ImGui_ImplGlfw_InitForOpenGL(window.GetWindow(), true);
             ImGui_ImplOpenGL3_Init("#version 130");
+
+            EventMgr::GetInstance()->SetKeyClick(GLFW_KEY_ESCAPE, new LambdaOp([&](){
+                window.CloseWindow();
+            }));
+
         }, false);
 
     auto eventOp = new LambdaOp([&]()
