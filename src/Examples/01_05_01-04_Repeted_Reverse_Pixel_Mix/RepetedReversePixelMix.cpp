@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 // settings
 const unsigned int SCR_WIDTH = 1366;
 const unsigned int SCR_HEIGHT = 768;
-const string APP_NAME = "RepetedReverse";
+const string APP_NAME = "RepetedReversePixelMix";
 
 int main(int, char**)
 {
