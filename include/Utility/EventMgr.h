@@ -25,8 +25,8 @@ namespace Hdgbdn
 		void SetKeyPress(int key, Ptr<Operation> op);
 		void TrigerEvent(int key, ENVENT_TYPE type);
 	private:
-		KeyOpMap click_map;
-		KeyOpMap press_map;
+		KeyOpMap click_func_map;
+		KeyOpMap press_func_map;
 	};
 }
 

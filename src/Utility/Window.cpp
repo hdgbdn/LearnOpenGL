@@ -34,9 +34,13 @@ Window::Window(unsigned int width, unsigned int height, const string &name)
 			switch (action)
 			{
 			case GLFW_RELEASE:
-				EventMgr::GetInstance()->TrigerEvent(key, EventMgr::CLICK);
+                break;
 			case GLFW_PRESS:
+				EventMgr::GetInstance()->TrigerEvent(key, EventMgr::CLICK);
+                break;
+            case GLFW_REPEAT:
 				EventMgr::GetInstance()->TrigerEvent(key, EventMgr::PRESSS);
+                break;
 			}
 
 		});
