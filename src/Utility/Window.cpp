@@ -29,21 +29,16 @@ Window::Window(unsigned int width, unsigned int height, const string &name)
     LoadGL();
     glViewport(0, 0, width, height);
 
-	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scanCode, int action, int mods)
-		{
-			switch (action)
-			{
-			case GLFW_RELEASE:
-                break;
-			case GLFW_PRESS:
-				EventMgr::GetInstance()->TrigerEvent(key, EventMgr::CLICK);
-                break;
-            case GLFW_REPEAT:
-				EventMgr::GetInstance()->TrigerEvent(key, EventMgr::PRESSS);
-                break;
-			}
+    glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scanCode, int action, int mods){
+        EventMgr::GetInstance()->ResponseGlfwKeyEvent(key, action);
+    });
 
-		});
+    glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int key, int action, int mods){
+        EventMgr::GetInstance()->ResponseGlfwKeyEvent(key, action);
+    });
+    glfwSetCursorPosCallback(window, [](GLFWwindow *w, double x, double y){
+        EventMgr::GetInstance()->ProcessMousePos(x, y);
+    });
 }
 
 void Window::CB_FrameBufferSize(GLFWwindow* window, int width, int height){

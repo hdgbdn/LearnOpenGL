@@ -72,7 +72,7 @@ target_include_directories(HDGBDN
     PUBLIC
     ${PROJECT_SOURCE_DIR}/include/Utility
 )
-target_link_libraries(HDGBDN glad glfw)
+target_link_libraries(HDGBDN glad glfw glm::glm)
 
 set_target_properties(HDGBDN PROPERTIES
             CXX_STANDARD 17
