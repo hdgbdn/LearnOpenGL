@@ -1,7 +1,7 @@
 #ifndef _SINGLETON_H_
 #define _SINGLETON_H_
 
-namespace Hdgbdn
+namespace hdgbdn
 {
 	template<typename T>
     class Singleton

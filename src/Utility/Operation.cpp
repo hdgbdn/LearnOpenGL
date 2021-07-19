@@ -1,20 +1,21 @@
 #include "Operation.h"
 
-#include <iostream>
+using namespace hdgbdn;
 
-using namespace Hdgbdn;
-using namespace std;
+Operation::Operation(LambdaFunc&& rhs)
+{
+	p = std::make_shared<LambdaOperation>(std::move(rhs));
+}
 
-Operation::Operation(bool isHold) : isHold(isHold) {};
+Operation::Operation(const LambdaFunc& rhs)
+{
+	p = std::make_shared<LambdaOperation>(rhs);
+}
 
-Operation::~Operation() { std::cout << "INFO: Delete Operation" << std::endl; }
+void Operation::operator()()
+{
+	p->operator()();
+}
 
-void Operation::ProtectDelete(Operation* op) { delete op; }
-
-bool Operation::IsHold() { return isHold; }
-
-void Operation::SetIsHold(bool isHold) { this->isHold = isHold; }
-
-void Operation::operator()() { Run(); }
-
+Operation::~Operation() { }
 

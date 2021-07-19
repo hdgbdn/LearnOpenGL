@@ -1,44 +1,30 @@
 #ifndef _OPERATION_H_
 #define _OPERATION_H_
-#include <memory>
 
-namespace Hdgbdn
+#include <memory>
+#include <functional>
+#include "Operation_base.h"
+#include "LambdaOperation.h"
+
+namespace hdgbdn
 {
-	template<typename T>
-	using Ptr = std::shared_ptr<T>;
+	using LambdaFunc = std::function<void()>;
 	class Operation
 	{
 	public:
-		template <typename T>
-		static Ptr<T> ToPtr(T* op) {
-			return Ptr<T>(op, ProtectDelete);
-		}
+		Operation(const Operation&) = default;
+		Operation(Operation&&) = default;
 
-		bool IsHold();
-		void SetIsHold(bool isHold);
-		void operator()();
-		virtual void Run() = 0;
-	protected:
-		Operation(bool isHold = true);
-		static void ProtectDelete(Operation* op);
+		Operation& operator=(const Operation&) = default;
+		Operation& operator=(Operation&&) = default;
 
-		/// <summary>
-		/// virtual Destructor, for a base pointer to destroy a derived object
-		/// </summary>
+		// TODO: maybe template, use only one function to match all possible types?
+		Operation(const LambdaFunc&);
+		Operation(LambdaFunc&&);
+		virtual void operator()();
 		virtual ~Operation();
-		bool isHold;
 	private:
-		/// <summary>
-		/// prevent copy construct
-		/// </summary>
-		/// <param name=""></param>
-		Operation(const Operation&) = delete;
-		/// <summary>
-		/// prevent assign construct
-		/// </summary>
-		/// <param name=""></param>
-		/// <returns></returns>
-		Operation& operator=(const Operation&) = delete;
+		std::shared_ptr<Operation_base> p;
 	};
 }
 

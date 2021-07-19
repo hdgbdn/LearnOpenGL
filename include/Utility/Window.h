@@ -4,27 +4,29 @@
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include <string>
-#include "OpQueue.h"
 
 using namespace std;
 
-namespace Hdgbdn
+namespace hdgbdn
 {
     class Window
     {
     public:
-        Window(unsigned int width, unsigned int height, const string& name);
-        void CloseWindow();
-        void Terminate();
-        int GetKey(int key);
-        GLFWAPI GLFWglproc GetProcAddress(const char* procname);
-        void Run(Operation* op);
-        void Run(Ptr<Operation>& op);
-        GLFWwindow* GetWindow();
+        Window(unsigned int w = 1280, unsigned int h = 720, const string& name = "Untitled Window");
+        Window(const Window&) = delete;
+        Window(Window&&) = delete;
+        Window& operator=(const Window&) = delete;
+        Window& operator=(Window&&) = delete;
+
+        static void StartRenderLoop(Window&);
+
+        void SetFramebufferSizeCallback();
+        void SetCursorPosCallback();
+        void SetScrollCallback();
+        ~Window();
     private:
-        GLFWwindow *window;
-        static void CB_FrameBufferSize(GLFWwindow* window, int width, int height);
-        void LoadGL();
+        bool isInit;
+        GLFWwindow* pW;
     };
 }
 
