@@ -18,7 +18,7 @@ namespace hdgbdn
 	protected:
 		void operator()() override;
 	private:
-		std::shared_ptr<std::function<void()>> p;
+		std::function<void()> func;
 	};
 }
 

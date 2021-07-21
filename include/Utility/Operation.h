@@ -12,6 +12,7 @@ namespace hdgbdn
 	class Operation
 	{
 	public:
+		Operation() = default;
 		Operation(const Operation&) = default;
 		Operation(Operation&&) = default;
 

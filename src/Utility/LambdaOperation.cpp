@@ -2,16 +2,16 @@
 
 using namespace hdgbdn;
 
-LambdaOperation::LambdaOperation(const std::function<void()>& rhs):
-		p(std::make_shared<std::function<void()>>(rhs)){}
+LambdaOperation::LambdaOperation(const std::function<void()>& rhs) :
+	func(rhs) {}
 
-LambdaOperation::LambdaOperation(std::function<void()>&& rhs):
-		p(std::make_shared<std::function<void()>>(std::move(rhs))){}
+LambdaOperation::LambdaOperation(std::function<void()>&& rhs) :
+	func(std::move(rhs)) {}
 
 
 void LambdaOperation::operator()()
 {
-	p->operator()();
+	func();
 }
 
 LambdaOperation::~LambdaOperation() {}
