@@ -4,7 +4,7 @@
 #include "stb_image.h"
 #include "glad/glad.h"
 
-namespace Hdgbdn
+namespace hdgbdn
 {
 	class Texture
 	{

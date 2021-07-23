@@ -4,7 +4,7 @@
 #include "stb_image.h"
 #include "Texture.h"
 
-using namespace Hdgbdn;
+using namespace hdgbdn;
 using namespace std;
 
 Texture::Texture():texture_id(0), width(0), height(0), nrComponents(0) {}

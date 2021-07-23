@@ -26,7 +26,7 @@ Window::Window(unsigned w, unsigned h, const string& name)
 
 }
 
-void Window::PushPostRenderOperation(const Operation& op)
+void Window::PushPreRenderOperation(const Operation& op)
 {
     preRenderOpVec.push_back(op);
 }
@@ -37,7 +37,7 @@ void Window::PushRenderOperation(const Operation& op)
 }
 
 
-void Window::PushPreRenderOperation(const Operation& op)
+void Window::PushPostRenderOperation(const Operation& op)
 {
     postRenderOpVec.push_back(op);
 }
@@ -68,6 +68,10 @@ GLFWwindow* Window::get() const
     return pW;
 }
 
+void Window::Close() const
+{
+    glfwSetWindowShouldClose(pW, true);
+}
 
 Window::~Window()
 {

@@ -25,6 +25,8 @@ namespace hdgbdn
         void PushPreRenderOperation(const Operation&);
         void PushRenderOperation(const Operation&);
         void PushPostRenderOperation(const Operation&);
+
+        void Close() const;
     	
         operator GLFWwindow* ();
         GLFWwindow* get() const;
