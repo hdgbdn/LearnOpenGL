@@ -66,6 +66,10 @@ int main(int, char**)
 
 		ImGui::StyleColorsDark();
 
+		ImGuiStyle& style = ImGui::GetStyle();
+		ImGui::GetFontSize();
+		style.ScaleAllSizes(2);
+
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 130");
 	}));
