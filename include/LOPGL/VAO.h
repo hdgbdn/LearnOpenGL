@@ -8,13 +8,16 @@ namespace hdgbdn
 	{
 	public:
 		VAO(std::initializer_list<int>);
+		VAO(const VAO&);
+		VAO(VAO&&);
+		VAO& operator=(const VAO&) = delete;
+		VAO& operator=(VAO&&) = delete;
 		~VAO();
 		static void SetAttrPointer(const VAO&);
 		static void Bind(const VAO&);
 		static void UnBind();
 	private:
 		unsigned int id;
-		int attriCount;
 		std::vector<int> attribStride;
 	};
 }
