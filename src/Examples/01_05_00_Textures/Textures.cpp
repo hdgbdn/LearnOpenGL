@@ -1,137 +1,123 @@
-#include <stdio.h>
-#include <string>
-#include <filesystem>
 #include <iostream>
-#include "Window.h"
+#include "glad/glad.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "GLFW/glfw3.h"
-#include "glm/glm.hpp"
-#include "LambdaOp.h"
-#include "OpQueue.h"
+#include "Window.h"
+#include "Input.h"
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
+#include "Operation.h"
 #include "Shader.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include "Texture.h"
 
 using namespace std;
-using namespace Hdgbdn;
+using namespace hdgbdn;
 namespace fs = std::filesystem;
 
 // settings
 const unsigned int SCR_WIDTH = 1366;
 const unsigned int SCR_HEIGHT = 768;
 const string APP_NAME = "Textures";
+const fs::path shader_path = fs::current_path().parent_path() / "Shaders";
+const fs::path res_path = fs::current_path().parent_path().parent_path() / "res";
+const fs::path tex_path = res_path / "textures";
 
 int main(int, char**)
 {
-
 	cout << APP_NAME << endl;
 	Window window(SCR_WIDTH, SCR_HEIGHT, APP_NAME);
+	Input input(window);
 
-    const fs::path shader_path = fs::current_path().parent_path() / "Shaders";
-    Shader shader((shader_path / "vertex.vs").string(), (shader_path / "fragment.fs").string());
+	Shader shader((shader_path / "vertex.vs").string(), (shader_path / "fragment.fs").string());
 
-    const fs::path texture_path = fs::current_path().parent_path().parent_path() / "res"/ "textures";
+	glm::vec4 clear_color(0.2f, 0.3f, 0.3f, 1.0f);
+	float ratio = .0f;
 
-    glm::vec3 clear_color(0.2f, 0.3f, 0.3f);
-    float mix_ration = 0.2f;
+	VAO vao1{ 3, 3, 2 };
+	VBO vbo1({
+		// positions          // colors           // texture coords
+		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+		}, 4);
+	EBO ebo1({
+		0, 1, 3, // first triangle
+		1, 2, 3  // second triangle
+	});
+	VAO::Bind(vao1);
+	vbo1.BufferData();
+	ebo1.BufferData();
+	VAO::SetAttrPointer(vao1);
+	VAO::UnBind();
 
-    float vertices[] = {
-        // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-    };
-    unsigned int indices[] = {  
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
+	Texture tex1 = Texture((tex_path / "smile.jpg").string());
+	Texture tex2 = Texture((tex_path / "wood.png").string());
 
-    Texture tex_1((texture_path / "wall.jpg").string().c_str());
-    Texture tex_2((texture_path / "wood.png").string().c_str());
-	
-    unsigned int VAO, VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0* sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3* sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glBindVertexArray(0);
-
-    auto initOp = new LambdaOp([&]()
-        {
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
-            ImGuiIO& io = ImGui::GetIO();
-            (void)io;
-
-            ImGui::StyleColorsDark();
-
-            ImGui_ImplGlfw_InitForOpenGL(window.GetWindow(), true);
-            ImGui_ImplOpenGL3_Init("#version 130");
-        }, false);
-
-    auto eventOp = new LambdaOp([&]()
-        {
-            glfwPollEvents();
-        });
-
-	auto renderOp = new LambdaOp([&]()
+	window.PushPreRenderOperation(Operation([&]()
 		{
-            glClearColor(clear_color.x, clear_color.y, clear_color.z, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-            shader.Use();
-            glBindVertexArray(VAO);
-            shader.set("tex_1", 0);
-            shader.set("tex_2", 1);
-            shader.set("ratio", mix_ration);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, tex_1.GetID());
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, tex_2.GetID());
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
-		});
+			IMGUI_CHECKVERSION();
+			ImGui::CreateContext();
+			ImGuiIO& io = ImGui::GetIO();
+			(void)io;
 
-    auto uiOp = new LambdaOp([&]()
-        {
+			ImGui::StyleColorsDark();
+
+			ImGuiStyle& style = ImGui::GetStyle();
+			ImGui::GetFontSize();
+			style.ScaleAllSizes(2);
+
+			ImGui_ImplGlfw_InitForOpenGL(window, true);
+			ImGui_ImplOpenGL3_Init("#version 130");
+
+			shader.Use();
+			shader.set("tex_1", 0);
+			shader.set("tex_2", 1);
+		}));
+
+	window.PushRenderOperation(Operation([&]
+		{
+			glfwPollEvents();
+			input.Update();
+			glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			shader.Use();
+			shader.set("ratio", ratio);
+			Texture::BindToUnit(tex1, 0);
+			Texture::BindToUnit(tex2, 1);
+			VAO::Bind(vao1);
+			ebo1.Draw();
+
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
 			{
 				ImGui::Begin(APP_NAME.c_str());
-                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-                ImGui::ColorEdit3("clear color", (float*)&clear_color);
-                ImGui::SliderFloat("mix ratio", &mix_ration, 0.0f, 1.0f);
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+				ImGui::ColorEdit4("Clear color", (float*)&clear_color);
+				ImGui::SliderFloat("Blend ratio", &ratio, .0f, 1.f);
 				ImGui::End();
 			}
-            // render ui on the top
+
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        });
-    auto endOp = new LambdaOp([&]()
-        {
-			glfwSwapBuffers(window.GetWindow());
-        });
-    auto opQueue = new OpQueue;
-    (*opQueue) << initOp << eventOp << renderOp << uiOp << endOp;
-    window.Run(opQueue);
+
+			glfwSwapBuffers(window);
+		}));
+	window.PushPostRenderOperation(Operation([]()
+		{
+			glfwTerminate();
+		}));
+
+	input.SetKeyDownCb(GLFW_KEY_ESCAPE, Operation([&window]()
+		{
+			window.Close();
+		}));
+
+	Window::StartRenderLoop(window);
 
 	return 0;
 }

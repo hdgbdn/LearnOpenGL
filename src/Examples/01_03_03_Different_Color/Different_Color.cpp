@@ -30,22 +30,22 @@ int main(int, char**)
 	Input input(window);
 
     VAO vao1{ 3 };
-	VBO vbo1{
+	VBO vbo1({
 		0.5f,  0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
 		-0.5f, -0.5f, 0.0f,
-	};
+		}, 3);
 	VAO::Bind(vao1);
 	vbo1.BufferData();
 	VAO::SetAttrPointer(vao1);
 	VAO::UnBind();
 
 	VAO vao2{ 3 };
-	VBO vbo2{
+	VBO vbo2({
 		-0.5f, -0.5f, 0.0f,
 		-0.5f,  0.5f, 0.0f,
 		0.5f,  0.5f, 0.0f,
-	};
+		}, 3);
 	VAO::Bind(vao2);
 	vbo2.BufferData();
 	VAO::SetAttrPointer(vao2);

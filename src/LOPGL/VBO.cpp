@@ -5,9 +5,9 @@
 
 using namespace hdgbdn;
 
-VBO::VBO(const std::vector<float>& vertices) :GLBuffer(vertices) {}
+VBO::VBO(const std::vector<float>& vertices, int c) :GLBuffer(vertices), elememtCount(c) {}
 
-VBO::VBO(std::initializer_list<float> vertices) : GLBuffer(vertices) {}
+VBO::VBO(std::initializer_list<float> vertices, int c) : GLBuffer(vertices), elememtCount(c) {}
 
 void VBO::BufferData()
 {
@@ -17,5 +17,5 @@ void VBO::BufferData()
 
 void VBO::Draw()
 {
-	glDrawArrays(GL_TRIANGLES, 0, count);
+	glDrawArrays(GL_TRIANGLES, 0, elememtCount);
 }

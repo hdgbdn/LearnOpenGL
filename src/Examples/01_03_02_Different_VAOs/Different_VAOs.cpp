@@ -29,7 +29,7 @@ int main(int, char**)
 	 0.5f,  0.5f, 0.0f,
 	 0.5f, -0.5f, 0.0f,
 	-0.5f, -0.5f, 0.0f,
-		});
+		}, 3);
 
     VAO::Bind(vao1);
     vbo1.BufferData();
@@ -41,7 +41,7 @@ int main(int, char**)
     -0.8f, -0.5f, 0.0f,
     -0.5f,  0.5f, 0.0f,
      0.5f,  0.7f, 0.0f,
-        });
+        }, 3);
     VAO::Bind(vao2);
     vbo2.BufferData();
     VAO::SetAttrPointer(vao2);

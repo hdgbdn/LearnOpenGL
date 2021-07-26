@@ -36,12 +36,12 @@ int main(int, char**)
     glm::vec4 clear_color(0.2f, 0.3f, 0.3f, 1.0f);
 
     VAO vao1{ 3, 3 };
-    VBO vbo1{
-        // positions         // colors
-         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-    };
+    VBO vbo1({
+		// positions         // colors
+		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+		}, 3);
     VAO::Bind(vao1);
     vbo1.BufferData();
     VAO::SetAttrPointer(vao1);

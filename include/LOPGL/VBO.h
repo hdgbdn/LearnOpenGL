@@ -8,10 +8,12 @@ namespace hdgbdn
 	class VBO: public GLBuffer<float>
 	{
 	public:
-		VBO(const std::vector<float>&);
-		VBO(std::initializer_list<float>);
+		VBO(const std::vector<float>&, int);
+		VBO(std::initializer_list<float>, int);
 		void Draw() override;
 		void BufferData() override;
+	private:
+		int elememtCount;
 	};
 }
 

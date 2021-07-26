@@ -37,12 +37,12 @@ int main(int, char**)
 	glm::vec3 offset(.0f, .0f, .0f);
 
 	VAO vao1{ 3, 3 };
-	VBO vbo1{
+	VBO vbo1({
 		// positions         // colors
 		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
 		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
 		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-	};
+		}, 3);
 	VAO::Bind(vao1);
 	vbo1.BufferData();
 	VAO::SetAttrPointer(vao1);
