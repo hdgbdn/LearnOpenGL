@@ -9,14 +9,15 @@ using namespace std;
 
 Texture::Texture(string path, bool flip, int wrapping, int filtering) :
 	texture_id(0), width(0), height(0), nrComponents(0),
-	pData(stbi_load(path.c_str(), &width, &height, &nrComponents, 0), ([&](stbi_uc* data)
-		{
-			stbi_image_free(data);
-			if (texture_id != 0) glDeleteTextures(1, &texture_id);
-		}))
+	pData()
 {
 	glGenTextures(1, &texture_id);
 	stbi_set_flip_vertically_on_load(flip);
+	pData = shared_ptr<stbi_uc>(stbi_load(path.c_str(), &width, &height, &nrComponents, 0), ([&](stbi_uc* data)
+		{
+			stbi_image_free(data);
+			if (texture_id != 0) glDeleteTextures(1, &texture_id);
+		}));
 	if (pData.get())
 	{
 		GLenum internalFormat;
