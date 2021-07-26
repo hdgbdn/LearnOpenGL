@@ -42,10 +42,10 @@ int main(int, char**)
 	VAO vao1{ 3, 3, 2 };
 	VBO vbo1({
 		// positions          // colors           // texture coords
-		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   0.55f, 0.55f, // top right
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   0.55f, 0.45f, // bottom right
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.45f, 0.45f, // bottom left
-		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.45f, 0.55f  // top left 
+		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
 		}, 4);
 	EBO ebo1({
 		0, 1, 3, // first triangle
@@ -57,7 +57,7 @@ int main(int, char**)
 	VAO::SetAttrPointer(vao1);
 	VAO::UnBind();
 
-	Texture tex1 = Texture((tex_path / "smile.jpg").string(), true, GL_CLAMP_TO_EDGE, GL_NEAREST);
+	Texture tex1 = Texture((tex_path / "smile.jpg").string(), true, GL_REPEAT, GL_NEAREST);
 	Texture tex2 = Texture((tex_path / "wood.png").string());
 
 	window.PushPreRenderOperation(Operation([&]()
