@@ -7,14 +7,17 @@
 using namespace hdgbdn;
 using namespace std;
 
-Texture::Texture():texture_id(0), width(0), height(0), nrComponents(0) {}
-
-Texture::Texture(const char* path, bool flip, int wrapping, int filtering) : texture_id(0), width(0), height(0), nrComponents(0)
+Texture::Texture(string path, bool flip, int wrapping, int filtering) :
+	texture_id(0), width(0), height(0), nrComponents(0),
+	pData(stbi_load(path.c_str(), &width, &height, &nrComponents, 0), ([&](stbi_uc* data)
+		{
+			stbi_image_free(data);
+			if (texture_id != 0) glDeleteTextures(1, &texture_id);
+		}))
 {
 	glGenTextures(1, &texture_id);
 	stbi_set_flip_vertically_on_load(flip);
-	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-	if (data)
+	if (pData.get())
 	{
 		GLenum internalFormat;
 		GLenum dataFormat;
@@ -34,26 +37,33 @@ Texture::Texture(const char* path, bool flip, int wrapping, int filtering) : tex
 		}
 
 		glBindTexture(GL_TEXTURE_2D, texture_id);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, pData.get());
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filtering);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filtering);
-
-		stbi_image_free(data);
 	}
 	else
 	{
 		texture_id = 0;
 		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
 	}
 }
 
-unsigned Texture::GetID()
+Texture::operator unsigned int()
 {
 	return texture_id;
 }
 
+Texture::operator unsigned int() const
+{
+	return texture_id;
+}
+
+void Texture::BindToUnit(const Texture& tex, int unit)
+{
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(GL_TEXTURE_2D, tex);
+}
