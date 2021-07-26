@@ -59,7 +59,7 @@ target_include_directories(LOPGL
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include/LOPGL
     )
-target_link_libraries(LOPGL glad glfw OpenGL::GL assimp glm::glm)
+target_link_libraries(LOPGL glad glfw OpenGL::GL assimp glm::glm imgui)
 
 ## My personal utils
 file(GLOB HDGBDN_SRC
