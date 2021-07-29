@@ -5,8 +5,11 @@
 using namespace std;
 using namespace hdgbdn;
 
+std::unordered_map<GLFWwindow*, Window*> Window::winMap = std::unordered_map<GLFWwindow*, Window*>();
+
 Window::Window(unsigned w, unsigned h, const string& name)
-		:isInit(false), pW(nullptr), preRenderOpVec(), renderOpVec(), postRenderOpVec()
+		:isInit(false), pW(nullptr), preRenderOpVec(), renderOpVec(), postRenderOpVec(),
+			width(w), height(h)
 {
 	glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -23,7 +26,18 @@ Window::Window(unsigned w, unsigned h, const string& name)
         throw(runtime_error("failed to initialize GLAD"));
     }
     isInit = true;
+    winMap.insert({ pW, this });
 
+    glfwSetFramebufferSizeCallback(pW, [](GLFWwindow * window, int w, int h)
+    {
+            Window* win = winMap[window];
+    	if(win != nullptr)
+    	{
+            win->width = w;
+            win->height = h;
+            glViewport(0, 0, w, h);
+    	}
+    });
 }
 
 void Window::PushPreRenderOperation(const Operation& op)
@@ -73,8 +87,20 @@ void Window::Close() const
     glfwSetWindowShouldClose(pW, true);
 }
 
+int Window::GetWidth() const
+{
+    return width;
+}
+
+
+int Window::GetHeight() const
+{
+    return height;
+}
+
 Window::~Window()
 {
     if (!isInit) return;
+    winMap.erase(pW);
     glfwTerminate();
 }

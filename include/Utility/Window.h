@@ -27,6 +27,9 @@ namespace hdgbdn
         void PushPostRenderOperation(const Operation&);
 
         void Close() const;
+
+        int GetWidth() const;
+        int GetHeight() const;
     	
         operator GLFWwindow* ();
         GLFWwindow* get() const;
@@ -38,6 +41,10 @@ namespace hdgbdn
         OperationVec preRenderOpVec;
         OperationVec renderOpVec;
         OperationVec postRenderOpVec;
+
+        int width;
+        int height;
+        static std::unordered_map<GLFWwindow*, Window*> winMap;
     };
 }
 
