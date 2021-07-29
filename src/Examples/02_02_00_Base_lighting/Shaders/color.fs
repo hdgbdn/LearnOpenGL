@@ -8,7 +8,7 @@ out vec4 FragColor;
 uniform vec4 lightColor;
 uniform vec3 lightPos; 
 uniform vec3 viewPos; 
-uniform float ambientStrenth;
+uniform float ambientStrength;
 uniform int shininess;
 uniform sampler2D tex;
 
@@ -24,5 +24,5 @@ void main()
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
 
-    FragColor = (ambientStrenth + diff + spec) * texColor;
+    FragColor = (ambientStrength + diff + spec) * texColor;
 }

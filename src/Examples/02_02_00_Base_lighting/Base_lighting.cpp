@@ -46,7 +46,7 @@ int main(int, char**)
 
 	// light arguments
 	Color lightColor(1.f, 1.f, 1.f, 1.f);
-	float ambientStrenth = 0.1f;
+	float ambientStrength = 0.1f;
 	int shininess = 32;
 
 	VAO vao1{3, 3, 2};
@@ -154,7 +154,7 @@ int main(int, char**)
 			colorShader.set("lightColor", lightColor.GetRaw());
 			colorShader.set("lightPos", lightPos);
 			colorShader.set("viewPos", cam.GetPosition());
-			colorShader.set("ambientStrenth", ambientStrenth);
+			colorShader.set("ambientStrength", ambientStrength);
 			colorShader.set("shininess", shininess);
 			colorShader.set("model", colorModel);
 			colorShader.set("view", view);
@@ -174,7 +174,7 @@ int main(int, char**)
 				ImGui::SliderFloat("Rotate Angle", &rotate_angle, -180.f, 180.f);
 				ImGui::ColorEdit4("Light color", lightColor.GetRawPointer());
 				ImGui::SliderFloat3("Light position", reinterpret_cast<float*>(&lightPos), -2.f, 2.f);
-				ImGui::SliderFloat("Ambient strength", &ambientStrenth, -.0f, 1.f);
+				ImGui::SliderFloat("Ambient strength", &ambientStrength, -.0f, 1.f);
 				ImGui::SliderInt("Shininess", &shininess, 0, 512);
 				ImGui::Text("Camera: Position x:%.3f, y:%.3f, z:%.3f", cam.GetPosition().x, cam.GetPosition().y, cam.GetPosition().z);
 				ImGui::Text("Mouse: Position x:%.3f, y:%.3f, Delta: x:%.3f, y:%.3f", input.GetCursorPos().x, input.GetCursorPos().y, input.GetCursorDelta().x, input.GetCursorDelta().y);
