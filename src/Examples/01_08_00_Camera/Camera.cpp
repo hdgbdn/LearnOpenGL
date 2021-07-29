@@ -23,6 +23,7 @@ const unsigned int SCR_HEIGHT = 768;
 const string APP_NAME = "Coordinate";
 const fs::path shader_path = fs::current_path().parent_path() / "Shaders";
 const fs::path res_path = fs::current_path().parent_path().parent_path() / "res";
+const fs::path font_path = res_path / "Fonts";
 const fs::path tex_path = res_path / "textures";
 
 int main(int, char**)
@@ -43,7 +44,6 @@ int main(int, char**)
 	float view_distance = 3.0f;
 
 	float fov = 45.f;
-	float hw_ration = 1.f;
 
 	VAO vao1{ 3, 2};
 	VBO vbo1({
@@ -102,12 +102,13 @@ int main(int, char**)
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
-			(void)io;
+			io.Fonts->AddFontFromFileTTF((font_path/"sarasa-term-j-regular.ttf").string().c_str(), 20);
 
 			ImGui::StyleColorsDark();
 
 			ImGuiStyle& style = ImGui::GetStyle();
-			style.ScaleAllSizes(2);
+	
+			style.ScaleAllSizes(1.5);
 
 			ImGui_ImplGlfw_InitForOpenGL(window, true);
 			ImGui_ImplOpenGL3_Init("#version 130");
@@ -133,7 +134,7 @@ int main(int, char**)
 
 			glm::mat4 view = cam.GetViewMatrix();
 
-			glm::mat4 projection = glm::perspective(glm::radians(cam.GetZoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(cam.GetZoom()), (float)window.GetWidth() / (float)window.GetHeight(), 0.1f, 100.0f);
 		
 			shader.Use();
 			shader.set("ratio", ratio);
@@ -157,7 +158,6 @@ int main(int, char**)
 				ImGui::SliderFloat("Rotate Angle", &rotate_angle, -180.f, 180.f);
 				ImGui::SliderFloat("View distance", &view_distance, -10.f, 10.f);
 				ImGui::SliderFloat("Filed of view", &fov, 0.f, 120.f);
-				ImGui::SliderFloat("Height width ration", &hw_ration, 1.f, 2.f);
 				ImGui::Text("Camera: Position x:%.3f, y:%.3f, z:%.3f", cam.GetPosition().x, cam.GetPosition().y, cam.GetPosition().z);
 				ImGui::Text("Mouse: Position x:%.3f, y:%.3f, Delta: x:%.3f, y:%.3f", input.GetCursorPos().x, input.GetCursorPos().y, input.GetCursorDelta().x, input.GetCursorDelta().y);
 				ImGui::End();
