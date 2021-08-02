@@ -7,6 +7,7 @@
 namespace hdgbdn
 {
 	void SetDirectLight(Shader& shader, const DirectionalLight& light);
+	void SetPointLight(Shader& shader, const PointLight& light, int i);
 }
 
 #endif
