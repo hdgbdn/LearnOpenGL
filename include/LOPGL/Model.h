@@ -15,33 +15,33 @@
 #include <filesystem>
 #include <map>
 #include <vector>
+#include <unordered_map>
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
 
 class Model {
-private:
-    vector<Mesh> meshes;
-    string directory;
-
-    void loadModel(string path);
-
-    void processNode(aiNode *node, const aiScene *scene);
-
-    Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-
-    vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName);
 
 public:
     Model(const char *path) {
         loadModel(path);
     }
     void Draw(Shader& shader);
-    void DrawInstances(Shader& shader, int count);
+private:
+    vector<Mesh> meshes;
+    string directory;
+    std::unordered_map<std::string, Texture> textureLoaded;
+    void loadModel(string path);
+
+    void processNode(aiNode* node, const aiScene* scene);
+
+    Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+
+    vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 };
 
 void Model::loadModel(string path) {
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         cout << "ERROR::ASSIMP::" << importer.GetErrorString() << endl;
@@ -102,223 +102,52 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     // process material
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-        vector<Texture> diffuseMaps = loadMaterialTextures(material,
-                                                           aiTextureType_DIFFUSE, "texture_diffuse");
+        // 1. diffuse maps
+        vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        vector<Texture> specularMaps = loadMaterialTextures(material,
-                                                            aiTextureType_SPECULAR, "texture_specular");
+        // 2. specular maps
+        vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR);
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+        // 3. normal maps
+        std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT);
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+        // 4. height maps
+        std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT);
+        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
     }
     return Mesh(vertices, indices, textures);
 }
 
-vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName) {
+vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type) {
     vector<Texture> textures;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
         aiString str;
         mat->GetTexture(type, i, &str);
-        Texture texture;
-        texture.id = TextureFromFile(str.C_Str(), directory);
-        texture.type = typeName;
-        texture.path = str.C_Str();
-        textures.push_back(texture);
+        filesystem::path filePath(directory);
+        filePath = filePath.parent_path();
+        filePath /= str.C_Str();
+        filePath.make_preferred();
+        if (textureLoaded.find(filePath.string()) != textureLoaded.end()) textures.push_back(textureLoaded[filePath.string()]);
+        else
+        {
+            TextureType texType = TextureType::DIFFUSE;
+            if (type == aiTextureType_DIFFUSE)
+                texType = TextureType::DIFFUSE;
+            else if (type == aiTextureType_SPECULAR)
+                texType = TextureType::SPECULAR;
+            else if (type == aiTextureType_HEIGHT)
+                texType = TextureType::NORMAL;
+            else if (type == aiTextureType_AMBIENT)
+                texType = TextureType::HEIGHT;
+            Texture texture(filePath.string(), true, GL_TEXTURE_WRAP_R, GL_LINEAR, texType);
+            textureLoaded.insert({ filePath.string() , texture });
+            textures.push_back(texture);
+        }
     }
     return textures;
 }
 
-unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
-{
-    filesystem::path filePath(directory);
-    filePath = filePath.parent_path();
-    filePath /= path;
-    filePath.make_preferred();
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(filePath.string().c_str(), &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_R);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
-
 void Model::Draw(Shader &shader) {
     for(auto mesh : this->meshes) mesh.Draw(shader);
-}
-
-void Model::DrawInstances(Shader &shader, int count) {
-    for(auto mesh : this->meshes) mesh.DrawInstances(shader, count);
-}
-
-float cubeVertices[] = {
-        // positions          // normals           // texture coords
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-        0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-        0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-        0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-        0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-        0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-};
-
-float planeVertices[] = {
-    // positions            // normals         // texcoords
-     10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-    -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-
-     10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-     10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
-};
-
-float skyboxVertices[] = {
-    // positions          
-    -1.0f,  1.0f, -1.0f,
-    -1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-
-    -1.0f, -1.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,
-
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-
-    -1.0f, -1.0f,  1.0f,
-    -1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,
-
-    -1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f, -1.0f,
-
-    -1.0f, -1.0f, -1.0f,
-    -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-    -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f
-};
-
-Mesh cube;
-Mesh plane;
-Mesh meshSkybox;
-
-void AddTexture(Mesh& mesh, string type, string name)
-{
-    Texture texture;
-    std::string path = (filesystem::current_path().parent_path().parent_path() / "res" / "textures" / name).string();
-    texture.id = TextureFromFile(name.c_str(), path.c_str());
-    texture.type = type;
-    texture.path = path;
-    mesh.textures.push_back(texture);
-}
-
-void SetMesh(float* verticesArray, unsigned int vertCount,unsigned int nPos, unsigned int nNorm, unsigned int nUV, Mesh& dest, const char* name) {
-	vector<Vertex> verties;
-	vector<unsigned int> indicies;
-	vector<Texture> textures;
-    int len = nPos + nNorm + nUV;
-	for (int i = 0; i < vertCount; i++) {
-		Vertex vert;
-		for (int j = 0; j < nPos; j++) {
-			vert.Position[j] = verticesArray[i * len + j];
-		}
-		for (int j = nPos; j < nPos + nNorm; j++) {
-			vert.Normal[j - 3] = verticesArray[i * len + j];
-		}
-		for (int j = nPos + nNorm; j < nPos + nNorm + nUV; j++) {
-			vert.UV[j - 6] = verticesArray[i * len + j];
-		}
-		verties.push_back(vert);
-		indicies.push_back(i);
-	}
-    dest = Mesh(verties, indicies, textures);
-    AddTexture(dest, "texture_diffuse", name);
-}
-
-// default objects
-void SetDefaultMesh(){
-    SetMesh(cubeVertices, sizeof(cubeVertices)/sizeof(cubeVertices[0])/8, 3, 3, 2,cube, "wall.jpg");
-    SetMesh(planeVertices, sizeof(planeVertices)/sizeof(planeVertices[0])/8, 3, 3, 2, plane, "bricks2.jpg");
-    AddTexture(plane, "texture_normal", "bricks2_normal.jpg");
-    AddTexture(plane, "texture_height", "bricks2_disp.jpg");
-    SetMesh(skyboxVertices, sizeof(skyboxVertices)/sizeof(skyboxVertices[0])/3, 3, 0, 0, meshSkybox, "grass.png");
 }

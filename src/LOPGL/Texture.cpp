@@ -7,8 +7,8 @@
 using namespace hdgbdn;
 using namespace std;
 
-Texture::Texture(string path, bool flip, int wrapping, int filtering) :
-	texture_id(0), width(0), height(0), nrComponents(0),
+Texture::Texture(string path, bool flip, int wrapping, int filtering, TextureType type) :
+	path(path), texture_id(0), width(0), height(0), nrComponents(0), texType(type),
 	pData()
 {
 	glGenTextures(1, &texture_id);
@@ -52,6 +52,22 @@ Texture::Texture(string path, bool flip, int wrapping, int filtering) :
 		std::cout << "Texture failed to load at path: " << path << std::endl;
 	}
 }
+
+void Texture::setType(TextureType type)
+{
+	texType = type;
+}
+
+TextureType Texture::getType() const
+{
+	return texType;
+}
+
+std::string Texture::getPath() const
+{
+	return path;
+}
+
 
 Texture::operator unsigned int()
 {
