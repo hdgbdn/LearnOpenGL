@@ -8,17 +8,17 @@ using namespace hdgbdn;
 using namespace std;
 
 Texture::Texture(string path, bool flip, int wrapping, int filtering, TextureType type) :
-	path(path), texture_id(0), width(0), height(0), nrComponents(0), texType(type),
-	pData()
+	path(path), pID(), width(0), height(0), nrComponents(0), texType(type)
 {
-	glGenTextures(1, &texture_id);
-	stbi_set_flip_vertically_on_load(flip);
-	pData = shared_ptr<stbi_uc>(stbi_load(path.c_str(), &width, &height, &nrComponents, 0), ([&](stbi_uc* data)
+	pID = shared_ptr<unsigned int>(new unsigned int(0), [](unsigned int* id)
 		{
-			stbi_image_free(data);
-			if (texture_id != 0) glDeleteTextures(1, &texture_id);
-		}));
-	if (pData.get())
+			glDeleteTextures(1, id);
+		});
+	glGenTextures(1, pID.get());
+	stbi_set_flip_vertically_on_load(flip);
+	stbi_uc* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
+
+	if (data != nullptr)
 	{
 		GLenum internalFormat;
 		GLenum dataFormat;
@@ -37,21 +37,24 @@ Texture::Texture(string path, bool flip, int wrapping, int filtering, TextureTyp
 			dataFormat = GL_RGBA;
 		}
 
-		glBindTexture(GL_TEXTURE_2D, texture_id);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, pData.get());
+		glBindTexture(GL_TEXTURE_2D, *pID);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filtering);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filtering);
+		//stbi_image_free(data);
 	}
 	else
 	{
-		texture_id = 0;
 		std::cout << "Texture failed to load at path: " << path << std::endl;
 	}
 }
+
+Texture::~Texture() {}
+
 
 void Texture::setType(TextureType type)
 {
@@ -71,13 +74,19 @@ std::string Texture::getPath() const
 
 Texture::operator unsigned int()
 {
-	return texture_id;
+	return *pID;
 }
 
 Texture::operator unsigned int() const
 {
-	return texture_id;
+	return *pID;
 }
+
+unsigned int Texture::getID() const
+{
+	return *pID;
+}
+
 
 void Texture::BindToUnit(const Texture& tex, int unit)
 {

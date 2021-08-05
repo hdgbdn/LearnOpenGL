@@ -1,5 +1,8 @@
 #pragma once
+#include <string>
+#include "glm/fwd.hpp"
 #include "CommonHeader.h"
+
 class Shader{
 public:
     unsigned int ID;

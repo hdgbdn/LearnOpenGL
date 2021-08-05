@@ -1,4 +1,10 @@
 #include "Shader.h"
+#include "glad/glad.h"
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include "glm/glm.hpp"
+
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
     m_vertexPath = vertexPath;
     m_fragmentPath = fragmentPath;

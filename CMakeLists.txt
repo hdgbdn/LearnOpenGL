@@ -55,11 +55,17 @@ file(GLOB LOPGL_SRC
 add_library(LOPGL STATIC
     ${LOPGL_SRC}
 )
+
+set_target_properties(LOPGL PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+            )
+target_link_libraries(LOPGL glad glfw OpenGL::GL assimp glm::glm imgui)
+
 target_include_directories(LOPGL 
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include/LOPGL
     )
-target_link_libraries(LOPGL glad glfw OpenGL::GL assimp glm::glm imgui)
 
 ## My personal utils
 file(GLOB HDGBDN_SRC

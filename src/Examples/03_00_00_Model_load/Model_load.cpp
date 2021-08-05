@@ -7,7 +7,6 @@
 #include "Input.h"
 #include "Operation.h"
 #include "Shader.h"
-#include "Texture.h"
 #include "Camera.h"
 #include "Color.h"
 #include "Light.h"
@@ -37,8 +36,10 @@ int main(int, char**)
 	Input input(window);
 	Camera cam = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 	DirectionalLight dirLight;
-	Model model((model_path/"sponza" / "sponza.obj").string().c_str());
+	//Model model((model_path/"pony-car" / "Pony_cartoon.obj").string());
+	Model model((model_path/"Sponza" / "sponza.obj").string());
 
+	Texture tex1 = Texture((tex_path / "smile.jpg").string());
 	Shader lightShader((shader_path / "lightCube.vs").string(), (shader_path / "lightCube.fs").string());
 	Shader colorShader((shader_path / "light.vs").string(), (shader_path / "light.fs").string());
 
@@ -51,6 +52,26 @@ int main(int, char**)
 
 	// light arguments
 	float materialShininess(32.f);
+
+	std::function<void(ModelNode* root)> showModelTree = [&](ModelNode* root)
+	{
+		if(root->children.empty())
+		{
+			ImGui::Text(root->name.c_str());
+		}
+		else
+		{
+			if (ImGui::TreeNode(root->name.c_str()))
+			{
+				for (auto child : root->children) showModelTree(child);
+				ImGui::TreePop();
+			}
+		}
+		ImGui::SameLine();
+		ImGui::Text("Mesh count: %d", root->meshes.size());
+		ImGui::SameLine();
+		ImGui::Text("Children count: %d", root->children.size());
+	};
 
 	window.PushPreRenderOperation(Operation([&]()
 		{
@@ -79,7 +100,10 @@ int main(int, char**)
 		{
 			glfwPollEvents();
 			input.Update();
-			
+
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -125,6 +149,9 @@ int main(int, char**)
 
 				ImGui::Text("Camera: Position x:%.3f, y:%.3f, z:%.3f", cam.GetPosition().x, cam.GetPosition().y, cam.GetPosition().z);
 				ImGui::Text("Mouse: Position x:%.3f, y:%.3f, Delta: x:%.3f, y:%.3f", input.GetCursorPos().x, input.GetCursorPos().y, input.GetCursorDelta().x, input.GetCursorDelta().y);
+
+				//ImGui::Image(tex1.getID(), ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
+				showModelTree(model.getRootNode());
 				ImGui::End();
 			}
 

@@ -5,9 +5,7 @@
 #include <vector>
 #include "Shader.h"
 #include "Texture.h"
-#include "VAO.h"
-#include "VBO.h"
-#include "EBO.h"
+#include "glm/glm.hpp"
 
 using namespace std;
 
