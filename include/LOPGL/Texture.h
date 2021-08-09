@@ -29,7 +29,7 @@ namespace hdgbdn
 		std::string getPath() const;
 		operator unsigned int();
 		operator unsigned int() const;
-		unsigned int getID() const;
+		unsigned int* getIDRaw() const;
 		static void BindToUnit(const Texture&, int);
 	private:
 		std::string path;
