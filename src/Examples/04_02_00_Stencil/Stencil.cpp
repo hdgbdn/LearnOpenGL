@@ -148,6 +148,10 @@ int main(int, char**)
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+			glStencilMask(0xFF);	// necessary to set mask
+			// see: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glClear.xhtml:
+			// The pixel ownership test, the scissor test, dithering, and the buffer writemasks affect the operation of glClear.
+			// The scissor box bounds the cleared region. Alpha function, blend function, logical operation, stenciling, texture mapping, and depth-buffering are ignored by glClear.
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 			glm::mat4 view = cam.GetViewMatrix();
@@ -178,9 +182,7 @@ int main(int, char**)
 			glStencilMask(0x00);
 			glDisable(GL_DEPTH_TEST);
 			model.Draw(outlineShader);
-			glStencilMask(0xFF);
-			glStencilFunc(GL_ALWAYS, 0, 0xFF);
-			glEnable(GL_DEPTH_TEST);
+			//glEnable(GL_DEPTH_TEST);
 
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
