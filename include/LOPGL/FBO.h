@@ -15,10 +15,12 @@ namespace hdgbdn
         FBO& operator=(const FBO&);
         FBO& operator=(FBO&&);
         static void BindFBO(const FBO&);
-        static void UnBindFBO(const FBO&);
+        static void UnBindFBO();
+        GLuint getTexture();
     private:
-        std::shared_ptr<unsigned int> pFrameBufferID;
-        std::shared_ptr<unsigned int> pRenderBufferID;
+        GLuint fbo;
+        GLuint tex;
+        GLuint rbo;
     };
 }
 
